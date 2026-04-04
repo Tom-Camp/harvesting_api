@@ -13,6 +13,9 @@ class Settings(BaseSettings):
 
     gemini_api_key: str
 
+    log_level: str = "INFO"
+    json_logs: bool = False
+
     @computed_field
     @property
     def database_url(self) -> str:
