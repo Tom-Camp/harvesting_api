@@ -1,41 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.dependencies import get_current_user
 from app.db import get_session
-from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.models.user import User
+from app.schemas.user import ProfileUpdate, UserRead
 from app.services import user as user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.post("", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def create_user(
-    data: UserCreate,
-    session: AsyncSession = Depends(get_session),
-) -> UserRead:
-    user = await user_service.create_user(session, data)
+@router.get("/me", response_model=UserRead)
+async def get_me(user: User = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(user)
 
 
-@router.get("/{user_id}", response_model=UserRead)
-async def get_user(
-    user_id: int,
+@router.patch("/me", response_model=UserRead)
+async def update_me(
+    data: ProfileUpdate,
+    user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> UserRead:
-    user = await user_service.get_user(session, user_id)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return UserRead.model_validate(user)
-
-
-@router.patch("/{user_id}", response_model=UserRead)
-async def update_user(
-    user_id: int,
-    data: UserUpdate,
-    session: AsyncSession = Depends(get_session),
-) -> UserRead:
-    user = await user_service.get_user(session, user_id)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    user = await user_service.update_user(session, user, data)
+    user = await user_service.update_user(session, user, data.location)
     return UserRead.model_validate(user)

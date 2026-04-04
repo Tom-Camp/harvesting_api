@@ -1,12 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr
-
-
-class UserCreate(BaseModel):
-    email: EmailStr
-    password: str
-    location: str | None = None
+from pydantic import BaseModel, ConfigDict
 
 
 class UserRead(BaseModel):
@@ -14,9 +8,18 @@ class UserRead(BaseModel):
 
     id: int
     email: str
+    first_name: str | None = None
+    last_name: str | None = None
+    picture: str | None = None
     location: str | None = None
     created_at: datetime
 
 
-class UserUpdate(BaseModel):
-    location: str | None = None
+class ProfileUpdate(BaseModel):
+    location: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    profile_complete: bool
