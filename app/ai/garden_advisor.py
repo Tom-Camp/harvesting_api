@@ -1,20 +1,12 @@
 from pydantic_ai import Agent
-from pydantic_ai.models.gemini import GeminiModel
+from pydantic_ai.models.google import GoogleModel
+from pydantic_ai.providers.google import GoogleProvider
 
 from app.schemas.ai import GardenTipsResponse, TipMode
 from app.utils.config import settings
 
-_model = GeminiModel("gemini-1.5-flash", api_key=settings.gemini_api_key)
-
-_agent: Agent[None, GardenTipsResponse] = Agent(
-    _model,
-    result_type=GardenTipsResponse,
-    system_prompt=(
-        "You are an expert garden advisor. "
-        "Provide helpful, practical, and specific tips tailored to the plant and location provided. "
-        "Structure your response with clear titled sections and a concise summary."
-    ),
-)
+provider = GoogleProvider(api_key=settings.gemini_api_key)
+model = GoogleModel("gemini-2.5-flash", provider=provider)
 
 _PROMPTS: dict[TipMode, str] = {
     TipMode.PLANTING: "Provide planting tips for {plant_desc}{location_desc}.",
@@ -32,5 +24,16 @@ async def get_plant_tips(
     plant_desc = f"{variety} {plant_type}" if variety else plant_type
     location_desc = f" in {location}" if location else ""
     prompt = _PROMPTS[mode].format(plant_desc=plant_desc, location_desc=location_desc)
-    result = await _agent.run(prompt)
+
+    agent: Agent = Agent(
+        model=model,
+        output_type=GardenTipsResponse,
+        instructions=(
+            "You are an expert garden advisor. "
+            "Provide helpful, practical, and specific tips tailored to the plant and location provided. "
+            "Structure your response with clear titled sections and a concise summary."
+        ),
+        retries=3,
+    )
+    result = await agent.run(user_prompt=prompt)
     return result.output
