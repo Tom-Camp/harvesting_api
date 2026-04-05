@@ -1,6 +1,7 @@
-# harvesting.food
+# 🌱 🍅 🫛 arvesting.food 🥒 🫐 🥦
 
-An AI-powered garden management API. Users build a personal garden by adding plants, and Google Gemini provides tailored advice on planting, care, and harvesting based on the user's location.
+An AI-powered garden management API. Users build a personal garden by adding plants, and Google Gemini provides tailored 
+advice on planting, care, and harvesting based on the user's location.
 
 ## Tech Stack
 
@@ -23,7 +24,7 @@ An AI-powered garden management API. Users build a personal garden by adding pla
 
 ### 1. Clone and install
 
-```bash
+```shell
 git clone <repo>
 cd harvest.food
 uv sync
@@ -33,7 +34,7 @@ uv sync
 
 Copy the example and fill in your values:
 
-```bash
+```shell
 cp .env.example .env
 ```
 
@@ -63,19 +64,19 @@ JSON_LOGS=false
 
 ### 3. Start Postgres
 
-```bash
+```shell
 docker compose up -d
 ```
 
 ### 4. Run migrations
 
-```bash
+```shell
 uv run alembic upgrade head
 ```
 
 ### 5. Start the server
 
-```bash
+```shell
 uv run uvicorn app.main:app --reload
 ```
 
@@ -127,7 +128,8 @@ PATCH /api/v1/users/me
 { "location": "Austin, TX" }
 ```
 
-Location can be as specific or general as the user prefers — city, ZIP code, region, etc. It is used to personalise AI tips.
+Location can be as specific or general as the user prefers — city, ZIP code, region, etc. It is used to personalize AI 
+tips.
 
 ---
 
@@ -201,11 +203,11 @@ POST /api/v1/garden/plants/{plant_id}/tips?mode=care
 POST /api/v1/garden/plants/{plant_id}/tips?mode=harvest
 ```
 
-| Mode | Description |
-|---|---|
-| `planting` | When and how to plant based on your location and climate |
-| `care` | Watering, fertilising, and troubleshooting common problems |
-| `harvest` | Signs of ripeness and how to harvest |
+| Mode       | Description                                                |
+|------------|------------------------------------------------------------|
+| `planting` | When and how to plant based on your location and climate   |
+| `care`     | Watering, fertilising, and troubleshooting common problems |
+| `harvest`  | Signs of ripeness and how to harvest                       |
 
 Response:
 
@@ -216,7 +218,10 @@ Response:
   "variety": "roma",
   "location": "Austin, TX",
   "tips": [
-    { "title": "Best Planting Time", "content": "In Austin, TX, start roma tomatoes outdoors after the last frost, typically mid-March..." },
+    { 
+      "title": "Best Planting Time", 
+      "content": "In Austin, TX, start roma tomatoes outdoors after the last frost, typically mid-March..."
+    },
     { "title": "Soil Preparation", "content": "Roma tomatoes prefer well-drained soil with a pH of 6.0–6.8..." }
   ],
   "summary": "Roma tomatoes thrive in Austin's long growing season. Plant after mid-March and expect fruit by June."
@@ -231,33 +236,34 @@ Response:
 
 Pre-commit hooks run automatically on `git commit`. Install them once:
 
-```bash
+```shell
 uv run pre-commit install
 ```
 
 Run manually against all files:
 
-```bash
+```shell
 uv run pre-commit run --all-files
 ```
 
 ### Tests
 
-```bash
+```shell
 uv run pytest
 ```
 
 ### Commits
 
-This project uses [Conventional Commits](https://www.conventionalcommits.org/). Use `cz commit` for an interactive prompt:
+This project uses [Conventional Commits](https://www.conventionalcommits.org/). Use `cz commit` for an interactive 
+prompt:
 
-```bash
+```shell
 uv run cz commit
 ```
 
 ### Migrations
 
-```bash
+```shell
 # Generate a new migration after model changes
 uv run alembic revision --autogenerate -m "description"
 
