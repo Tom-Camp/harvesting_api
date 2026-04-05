@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
@@ -19,4 +17,4 @@ class User(ModelBase, table=True):
     picture: str | None = None
     location: str | None = None
 
-    garden: Garden | None = Relationship(back_populates="user")
+    garden: Optional["Garden"] = Relationship(back_populates="user")

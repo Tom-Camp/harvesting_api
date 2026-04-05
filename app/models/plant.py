@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import uuid
 from typing import TYPE_CHECKING
 
@@ -18,4 +16,4 @@ class Plant(ModelBase, table=True):
     variety: str | None = None
     notes: str | None = None
 
-    garden: Garden = Relationship(back_populates="plants")
+    garden: "Garden" = Relationship(back_populates="plants")

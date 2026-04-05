@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import uuid
 from typing import TYPE_CHECKING
 
@@ -18,5 +16,5 @@ class Garden(ModelBase, table=True):
     name: str
     notes: str | None = None
 
-    user: User = Relationship(back_populates="garden")
-    plants: list[Plant] = Relationship(back_populates="garden")
+    user: "User" = Relationship(back_populates="garden")
+    plants: list["Plant"] = Relationship(back_populates="garden")

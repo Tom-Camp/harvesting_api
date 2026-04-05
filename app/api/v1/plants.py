@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -44,7 +46,7 @@ async def add_plant(
 
 @router.get("/{plant_id}", response_model=PlantRead)
 async def get_plant(
-    plant_id: int,
+    plant_id: uuid.UUID,
     user: User = Depends(require_complete_profile),
     session: AsyncSession = Depends(get_session),
 ) -> PlantRead:
@@ -57,7 +59,7 @@ async def get_plant(
 
 @router.patch("/{plant_id}", response_model=PlantRead)
 async def update_plant(
-    plant_id: int,
+    plant_id: uuid.UUID,
     data: PlantUpdate,
     user: User = Depends(require_complete_profile),
     session: AsyncSession = Depends(get_session),
@@ -72,7 +74,7 @@ async def update_plant(
 
 @router.delete("/{plant_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_plant(
-    plant_id: int,
+    plant_id: uuid.UUID,
     user: User = Depends(require_complete_profile),
     session: AsyncSession = Depends(get_session),
 ) -> None:
@@ -85,7 +87,7 @@ async def delete_plant(
 
 @router.post("/{plant_id}/tips", response_model=GardenTipsResponse)
 async def get_tips(
-    plant_id: int,
+    plant_id: uuid.UUID,
     mode: TipMode,
     user: User = Depends(require_complete_profile),
     session: AsyncSession = Depends(get_session),
