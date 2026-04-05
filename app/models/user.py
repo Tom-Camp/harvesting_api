@@ -1,20 +1,22 @@
-from datetime import datetime, timezone
+from __future__ import annotations
 
-import sqlalchemy as sa
-from sqlmodel import Field, SQLModel
+from typing import TYPE_CHECKING
+
+from sqlmodel import Field, Relationship
+
+from app.models.base import ModelBase
+
+if TYPE_CHECKING:
+    from app.models.garden import Garden
 
 
-class User(SQLModel, table=True):
-    __tablename__ = "users"
+class User(ModelBase, table=True):
 
-    id: int | None = Field(default=None, primary_key=True)
     google_sub: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
     first_name: str | None = None
     last_name: str | None = None
     picture: str | None = None
     location: str | None = None
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        sa_column=sa.Column(sa.DateTime(timezone=True), nullable=False),
-    )
+
+    garden: Garden | None = Relationship(back_populates="user")

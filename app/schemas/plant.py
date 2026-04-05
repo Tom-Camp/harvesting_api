@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
@@ -12,12 +13,13 @@ class PlantCreate(BaseModel):
 class PlantRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
-    garden_id: int
+    id: uuid.UUID
+    garden_id: uuid.UUID
     plant_type: str
     variety: str | None = None
-    added_at: datetime
     notes: str | None = None
+    created_at: datetime
+    updated_at: datetime
 
 
 class PlantUpdate(BaseModel):

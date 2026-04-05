@@ -1,16 +1,22 @@
-from datetime import datetime, timezone
+from __future__ import annotations
 
-import sqlalchemy as sa
-from sqlmodel import Field, SQLModel
+import uuid
+from typing import TYPE_CHECKING
+
+from sqlmodel import Field, Relationship
+
+from app.models.base import ModelBase
+
+if TYPE_CHECKING:
+    from app.models.plant import Plant
+    from app.models.user import User
 
 
-class Garden(SQLModel, table=True):
-    __tablename__ = "gardens"
+class Garden(ModelBase, table=True):
 
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id", unique=True)
+    user_id: uuid.UUID = Field(foreign_key="user.id", unique=True)
     name: str
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        sa_column=sa.Column(sa.DateTime(timezone=True), nullable=False),
-    )
+    notes: str | None = None
+
+    user: User = Relationship(back_populates="garden")
+    plants: list[Plant] = Relationship(back_populates="garden")
