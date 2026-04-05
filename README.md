@@ -1,4 +1,4 @@
-# 🌱 🍅 🫛 arvesting.food 🥒 🫐 🥦
+# 🌱 🍅 🫛 harvesting.food 🥒 🫐 🥦
 
 An AI-powered garden management API. Users build a personal garden by adding plants, and Google Gemini provides tailored 
 advice on planting, care, and harvesting based on the user's location.
