@@ -58,9 +58,9 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.drop_table('plants')
+    op.drop_table('gardens')
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
-    op.drop_table('gardens')
     # ### end Alembic commands ###
 
 

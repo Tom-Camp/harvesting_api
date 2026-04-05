@@ -7,9 +7,9 @@ from app.ai.garden_advisor import get_plant_tips
 from app.auth.dependencies import require_complete_profile
 from app.db import get_session
 from app.models.garden import Garden
+from app.models.plant import CareInfo
 from app.models.user import User
-from app.schemas.ai import GardenTipsResponse, TipMode
-from app.schemas.plant import PlantCreate, PlantRead, PlantUpdate
+from app.schemas.plant import PlantCreate, PlantRead, PlantUpdate, CareInfoRead
 from app.services import garden as garden_service
 from app.services import plant as plant_service
 
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/garden/plants", tags=["plants"])
 
 
 async def _get_garden(session: AsyncSession, user: User) -> Garden:
-    garden = await garden_service.get_garden_by_user(session, user.id)
+    garden = await garden_service.get_garden_by_user(session=session, user_id=user.id)
     if not garden:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Garden not found")
     return garden
@@ -28,8 +28,8 @@ async def list_plants(
     user: User = Depends(require_complete_profile),
     session: AsyncSession = Depends(get_session),
 ) -> list[PlantRead]:
-    garden = await _get_garden(session, user)
-    plants = await plant_service.get_plants(session, garden.id)
+    garden = await _get_garden(session=session, user=user)
+    plants = await plant_service.get_plants(session=session, garden_id=garden.id)
     return [PlantRead.model_validate(p) for p in plants]
 
 
@@ -39,8 +39,8 @@ async def add_plant(
     user: User = Depends(require_complete_profile),
     session: AsyncSession = Depends(get_session),
 ) -> PlantRead:
-    garden = await _get_garden(session, user)
-    plant = await plant_service.create_plant(session, garden.id, data)
+    garden = await _get_garden(session=session, user=user)
+    plant = await plant_service.create_plant(session=session, garden_id=garden.id, data=data)
     return PlantRead.model_validate(plant)
 
 
@@ -85,20 +85,20 @@ async def delete_plant(
     await plant_service.delete_plant(session, plant)
 
 
-@router.post("/{plant_id}/tips", response_model=GardenTipsResponse)
-async def get_tips(
+@router.post("/{plant_id}/care", response_model=CareInfoRead)
+async def get_care_info(
     plant_id: uuid.UUID,
-    mode: TipMode,
     user: User = Depends(require_complete_profile),
     session: AsyncSession = Depends(get_session),
-) -> GardenTipsResponse:
+) -> CareInfo:
     garden = await _get_garden(session, user)
     plant = await plant_service.get_plant(session, plant_id)
     if not plant or plant.garden_id != garden.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plant not found")
-    return await get_plant_tips(
+    care = await get_plant_tips(
         plant_type=plant.plant_type,
-        mode=mode,
         variety=plant.variety,
         location=user.location,
     )
+    plant.care_info = care
+    return care

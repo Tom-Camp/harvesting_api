@@ -174,56 +174,79 @@ PATCH /api/v1/garden   { "name": "Front Yard" }
 
 ### 5. Manage plants
 
-Add plants by type, with an optional variety.
+Plants are the core of the garden. Add plants to your garden and get AI advice on how to grow them. Plants
+are categorized by type, which gives a general idea of their growth habits and care needs. The `plant_type` and 
+`species` fields are required, while `variety` is optional but help provide more specific advice.
+
+#### Plant categories
+
+| Category type | Main examples              | Typical lifespan            |
+|---------------|----------------------------|-----------------------------|
+| Herb          | Basil, thyme, mint         | Annual or perennial         |
+| Vegetable     | Tomato, lettuce, carrot    | Mostly annuals              |
+| Fruit         | Strawberry, apple, grape   | Mostly perennials/trees     |
+| Flower        | Rose, tulip, zinnia        | Annuals or perennials       |
+| Shrub         | Blueberry, hydrangea	Woody | perennial                   |
+| Tree          | Apple, maple               | Long‑lived woody perennial  |
+| Vine/climber  | Pole bean, cucumber, grape | Annuals or perennials       |
+
+#### Add a plant
 
 ```
 POST /api/v1/garden/plants
 ```
 
 ```json
-{ "plant_type": "tomato", "variety": "roma", "notes": "Started from seed" }
+{ 
+  "plant_type": "vegetable",
+  "species": "tomato",
+  "variety": "roma", 
+  "notes": "Started from seed",
+  "planted_date": "2026-04-01T00:00:00Z"
+}
 ```
+
+#### Add a note to a plant
+
+```
+POST /api/v1/garden/plants/{plant_id}/notes
+```
+
+```json
+{ "content": "First true leaves appeared!" }
+```
+
+#### View, update, delete plants
 
 ```
 GET    /api/v1/garden/plants
 GET    /api/v1/garden/plants/{plant_id}
-PATCH  /api/v1/garden/plants/{plant_id}   { "notes": "Transplanted outdoors" }
+PATCH  /api/v1/garden/plants/{plant_id}
 DELETE /api/v1/garden/plants/{plant_id}
 ```
 
 ---
 
-### 6. Get AI tips
+### 6. Get AI care information
 
 Request gardening advice for any plant in your garden. The `mode` query parameter selects the type of advice.
 
 ```
-POST /api/v1/garden/plants/{plant_id}/tips?mode=planting
-POST /api/v1/garden/plants/{plant_id}/tips?mode=care
-POST /api/v1/garden/plants/{plant_id}/tips?mode=harvest
+POST /api/v1/garden/plants/{plant_id}/care
 ```
 
-| Mode       | Description                                                |
-|------------|------------------------------------------------------------|
-| `planting` | When and how to plant based on your location and climate   |
-| `care`     | Watering, fertilising, and troubleshooting common problems |
-| `harvest`  | Signs of ripeness and how to harvest                       |
+The request body includes planting, care, harvesting information and any additional context needed for to raise the 
+plants.
+
 
 Response:
 
 ```json
 {
-  "mode": "planting",
-  "plant_type": "tomato",
-  "variety": "roma",
-  "location": "Austin, TX",
-  "tips": [
-    { 
-      "title": "Best Planting Time", 
-      "content": "In Austin, TX, start roma tomatoes outdoors after the last frost, typically mid-March..."
-    },
-    { "title": "Soil Preparation", "content": "Roma tomatoes prefer well-drained soil with a pH of 6.0–6.8..." }
-  ],
+  "planting": "Plant in early spring after the last frost. Space plants 24-36 inches apart in full sun.",
+  "care": "Water deeply once a week, more often in hot weather. Fertilize every 4-6 weeks with a balanced fertilizer. Watch for pests like aphids and tomato hornworms.",
+  "harvesting": "Harvest when fruits are fully red and slightly soft to the touch, usually 60-85 days after planting.",
+  "latin_name": "Solanum lycopersicum var. roma",
   "summary": "Roma tomatoes thrive in Austin's long growing season. Plant after mid-March and expect fruit by June."
 }
 ```

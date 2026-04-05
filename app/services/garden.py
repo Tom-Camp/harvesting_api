@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -5,7 +7,7 @@ from app.models.garden import Garden
 from app.schemas.garden import GardenCreate, GardenUpdate
 
 
-async def create_garden(session: AsyncSession, user_id: int, data: GardenCreate) -> Garden:
+async def create_garden(session: AsyncSession, user_id: UUID, data: GardenCreate) -> Garden:
     garden = Garden(user_id=user_id, name=data.name)
     session.add(garden)
     await session.commit()
@@ -13,7 +15,7 @@ async def create_garden(session: AsyncSession, user_id: int, data: GardenCreate)
     return garden
 
 
-async def get_garden_by_user(session: AsyncSession, user_id: int) -> Garden | None:
+async def get_garden_by_user(session: AsyncSession, user_id: UUID) -> Garden | None:
     result = await session.execute(select(Garden).where(Garden.user_id == user_id))
     return result.scalar_one_or_none()
 
