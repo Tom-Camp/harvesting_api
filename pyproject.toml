@@ -17,6 +17,7 @@ dependencies = [
     "sqlmodel>=0.0.22",
     "structlog>=25.0.0",
     "uvicorn[standard]>=0.34.0",
+    "python-slugify>=8.0.4",
 ]
 
 [dependency-groups]

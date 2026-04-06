@@ -14,6 +14,7 @@ class GardenRead(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
     name: str
+    slug: str
     created_at: datetime
     updated_at: datetime
 
