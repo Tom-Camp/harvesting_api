@@ -1,72 +1,46 @@
-import secrets
-
-import jwt
-import structlog
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.google import build_authorization_url, exchange_code_for_claims
-from app.auth.tokens import create_access_token, create_state_cookie, decode_state_cookie
+from app.auth.tokens import create_access_token
 from app.db import get_session
-from app.schemas.user import TokenResponse
+from app.models.user import UserStatus
+from app.schemas.user import LoginRequest, RegisterRequest, TokenResponse
+from app.services import garden_member as member_service
 from app.services import user as user_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-logger = structlog.get_logger()
-
-_STATE_COOKIE = "oauth_state"
 
 
-@router.get("/google/login")
-async def google_login(response: Response) -> dict[str, str]:
-    state = secrets.token_urlsafe(32)
-    nonce = secrets.token_urlsafe(32)
-    response.set_cookie(
-        _STATE_COOKIE,
-        create_state_cookie(state, nonce),
-        httponly=True,
-        max_age=600,
-        samesite="lax",
-        secure=False,  # TODO: set True when deployed over HTTPS
-    )
-    return {"authorization_url": build_authorization_url(state, nonce)}
+@router.post("/register", status_code=status.HTTP_201_CREATED)
+async def register(
+    data: RegisterRequest,
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, str]:
+    try:
+        await user_service.create_user(
+            session,
+            email=str(data.email),
+            password=data.password,
+            first_name=data.first_name,
+            last_name=data.last_name,
+        )
+    except IntegrityError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+    return {"message": "Registration successful. Your account is pending admin approval."}
 
 
-@router.get("/google/callback", response_model=TokenResponse)
-async def google_callback(
-    code: str,
-    state: str,
-    response: Response,
-    oauth_state: str | None = Cookie(default=None),
+@router.post("/login", response_model=TokenResponse)
+async def login(
+    data: LoginRequest,
     session: AsyncSession = Depends(get_session),
 ) -> TokenResponse:
-    if not oauth_state:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing state cookie")
-
-    try:
-        cookie_state, nonce = decode_state_cookie(oauth_state)
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid state cookie")
-
-    if cookie_state != state:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="State mismatch")
-
-    response.delete_cookie(_STATE_COOKIE)
-
-    try:
-        claims = await exchange_code_for_claims(code, nonce)
-    except Exception:
-        logger.exception("google_token_exchange_failed")
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Google authentication failed",
-        )
-
-    user = await user_service.find_or_create_from_google(session, claims)
-    logger.info("user_authenticated", user_id=user.id, email=user.email)
-
-    return TokenResponse(
-        access_token=create_access_token(user.id),
-        token_type="bearer",
-        profile_complete=user.location is not None,
-    )
+    user = await user_service.authenticate(session, str(data.email), data.password)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+    if user.status == UserStatus.SUSPENDED:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account suspended")
+    if user.status != UserStatus.ACTIVE:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account pending approval")
+    await member_service.accept_pending_invitations(session, user)
+    return TokenResponse(access_token=create_access_token(user.id))

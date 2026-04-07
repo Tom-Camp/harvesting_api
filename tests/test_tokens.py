@@ -4,12 +4,7 @@ from datetime import datetime, timedelta, timezone
 import jwt
 import pytest
 
-from app.auth.tokens import (
-    create_access_token,
-    create_state_cookie,
-    decode_access_token,
-    decode_state_cookie,
-)
+from app.auth.tokens import create_access_token, decode_access_token
 
 
 def test_create_and_decode_access_token():
@@ -47,16 +42,3 @@ def test_decode_access_token_expired():
     expired_token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
     with pytest.raises(jwt.PyJWTError):
         decode_access_token(expired_token)
-
-
-def test_create_and_decode_state_cookie():
-    state, nonce = "state-value-abc", "nonce-value-xyz"
-    cookie = create_state_cookie(state, nonce)
-    decoded_state, decoded_nonce = decode_state_cookie(cookie)
-    assert decoded_state == state
-    assert decoded_nonce == nonce
-
-
-def test_decode_state_cookie_invalid():
-    with pytest.raises(jwt.PyJWTError):
-        decode_state_cookie("invalid.cookie.value")

@@ -1,6 +1,5 @@
 import os
 
-# Set required env vars before any app module is imported (Pydantic Settings reads on instantiation)
 os.environ.setdefault("POSTGRES_USER", "test")
 os.environ.setdefault("POSTGRES_PASSWORD", "test")
 os.environ.setdefault("POSTGRES_DB", "test")
@@ -18,19 +17,19 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel
 
-from app.auth.dependencies import get_current_user, require_complete_profile
+from app.auth.dependencies import get_current_user, require_active_user
 from app.db import get_session
 from app.main import app
-from app.models.garden import Garden  # noqa: F401 — registers table with SQLModel.metadata
-from app.models.plant import Plant  # noqa: F401 — registers table with SQLModel.metadata
-from app.models.user import User  # noqa: F401 — registers table with SQLModel.metadata
+from app.models.garden import Garden  # noqa: F401
+from app.models.garden_member import GardenMember, GardenMemberRole  # noqa: F401
+from app.models.plant import Plant  # noqa: F401
+from app.models.user import User, UserRole, UserStatus  # noqa: F401
 
 _TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
 @pytest_asyncio.fixture
 async def engine():
-    """Fresh in-memory SQLite DB per test. StaticPool ensures all sessions share one connection."""
     _engine = create_async_engine(
         _TEST_DATABASE_URL,
         connect_args={"check_same_thread": False},
@@ -52,25 +51,56 @@ async def session(engine) -> AsyncGenerator[AsyncSession, None]:
 @pytest_asyncio.fixture
 async def test_user(session: AsyncSession) -> User:
     user = User(
-        google_sub="google-sub-test-1",
         email="testuser@example.com",
         first_name="Test",
         last_name="User",
-        location="Austin, TX",
+        status=UserStatus.ACTIVE,
+        role=UserRole.USER,
     )
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    session.expunge(user)  # detach so endpoint sessions can adopt it freely
+    session.expunge(user)
     return user
 
 
 @pytest_asyncio.fixture
-async def incomplete_user(session: AsyncSession) -> User:
+async def admin_user(session: AsyncSession) -> User:
     user = User(
-        google_sub="google-sub-test-2",
-        email="incomplete@example.com",
-        first_name="Incomplete",
+        email="admin@example.com",
+        first_name="Admin",
+        status=UserStatus.ACTIVE,
+        role=UserRole.ADMIN,
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    session.expunge(user)
+    return user
+
+
+@pytest_asyncio.fixture
+async def pending_user(session: AsyncSession) -> User:
+    user = User(
+        email="pending@example.com",
+        first_name="Pending",
+        status=UserStatus.PENDING,
+        role=UserRole.USER,
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    session.expunge(user)
+    return user
+
+
+@pytest_asyncio.fixture
+async def second_user(session: AsyncSession) -> User:
+    user = User(
+        email="second@example.com",
+        first_name="Second",
+        status=UserStatus.ACTIVE,
+        role=UserRole.USER,
     )
     session.add(user)
     await session.commit()
@@ -81,8 +111,10 @@ async def incomplete_user(session: AsyncSession) -> User:
 
 @pytest_asyncio.fixture
 async def test_garden(session: AsyncSession, test_user: User) -> Garden:
-    garden = Garden(user_id=test_user.id, name="My Test Garden")
+    garden = Garden(user_id=test_user.id, name="My Test Garden", slug="my-test-garden", location="Austin, TX")
     session.add(garden)
+    await session.flush()
+    session.add(GardenMember(garden_id=garden.id, user_id=test_user.id, role=GardenMemberRole.OWNER))
     await session.commit()
     await session.refresh(garden)
     session.expunge(garden)
@@ -91,7 +123,7 @@ async def test_garden(session: AsyncSession, test_user: User) -> Garden:
 
 @pytest_asyncio.fixture
 async def test_plant(session: AsyncSession, test_garden: Garden) -> Plant:
-    plant = Plant(garden_id=test_garden.id, plant_type="tomato", variety="cherry")
+    plant = Plant(garden_id=test_garden.id, plant_type="vegetable", species="tomato", variety="cherry")
     session.add(plant)
     await session.commit()
     await session.refresh(plant)
@@ -111,28 +143,49 @@ def _session_override(engine):
 
 @pytest_asyncio.fixture
 async def client(engine, test_user: User) -> AsyncGenerator[AsyncClient, None]:
-    """HTTP client authenticated as a user with a complete profile."""
-
     async def override_auth():
         return test_user
 
     app.dependency_overrides[get_session] = _session_override(engine)
     app.dependency_overrides[get_current_user] = override_auth
-    app.dependency_overrides[require_complete_profile] = override_auth
+    app.dependency_overrides[require_active_user] = override_auth
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()
 
 
 @pytest_asyncio.fixture
-async def incomplete_client(engine, incomplete_user: User) -> AsyncGenerator[AsyncClient, None]:
-    """HTTP client authenticated as a user without a location set.
+async def admin_client(engine, admin_user: User) -> AsyncGenerator[AsyncClient, None]:
+    async def override_auth():
+        return admin_user
 
-    require_complete_profile is NOT overridden so it naturally raises 403.
-    """
+    app.dependency_overrides[get_session] = _session_override(engine)
+    app.dependency_overrides[get_current_user] = override_auth
+    app.dependency_overrides[require_active_user] = override_auth
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def second_client(engine, second_user: User) -> AsyncGenerator[AsyncClient, None]:
+    async def override_auth():
+        return second_user
+
+    app.dependency_overrides[get_session] = _session_override(engine)
+    app.dependency_overrides[get_current_user] = override_auth
+    app.dependency_overrides[require_active_user] = override_auth
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def pending_client(engine, pending_user: User) -> AsyncGenerator[AsyncClient, None]:
+    """Client for a user whose account is pending approval — require_active_user NOT overridden."""
 
     async def override_get_current_user():
-        return incomplete_user
+        return pending_user
 
     app.dependency_overrides[get_session] = _session_override(engine)
     app.dependency_overrides[get_current_user] = override_get_current_user
@@ -143,7 +196,6 @@ async def incomplete_client(engine, incomplete_user: User) -> AsyncGenerator[Asy
 
 @pytest_asyncio.fixture
 async def unauthed_client(engine) -> AsyncGenerator[AsyncClient, None]:
-    """HTTP client with no auth overrides — used for testing auth endpoints."""
     app.dependency_overrides[get_session] = _session_override(engine)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c

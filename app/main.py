@@ -5,9 +5,9 @@ import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.router import router
-from app.auth.google import prefetch_jwks
 from app.db import engine
 from app.middleware import RequestLoggingMiddleware
 from app.utils.config import settings
@@ -20,7 +20,10 @@ logger = structlog.get_logger()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    await prefetch_jwks()
+    if settings.admin_email:
+        from app.services import user as user_service
+        async with AsyncSession(engine) as session:
+            await user_service.ensure_admin(session, settings.admin_email)
     logger.info("startup")
     yield
     await engine.dispose()

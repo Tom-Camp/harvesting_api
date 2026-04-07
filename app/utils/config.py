@@ -14,14 +14,11 @@ class Settings(BaseSettings):
 
     gemini_api_key: str
 
-    google_client_id: str
-    google_client_secret: str
+    admin_email: str | None = None
 
     jwt_secret: str
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60
-
-    app_base_url: str = "http://localhost:8000"
 
     log_level: str = "INFO"
     json_logs: bool = False
