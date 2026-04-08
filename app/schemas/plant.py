@@ -49,6 +49,7 @@ class PlantRead(BaseModel):
     variety: str | None = None
     notes: list[NoteRead] | None = None
     care_info: CareInfoRead | None
+    planted_date: datetime | None
     created_at: datetime
     updated_at: datetime
 
@@ -56,4 +57,5 @@ class PlantRead(BaseModel):
 class PlantUpdate(BaseModel):
     variety: str | None = None
     notes: str | None = None
+    planted_date: datetime | None = None
     care: CareInfo | None = None

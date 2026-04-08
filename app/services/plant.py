@@ -34,7 +34,7 @@ async def get_plant(session: AsyncSession, plant_id: UUID) -> Plant | None:
 
 
 async def update_plant(session: AsyncSession, plant: Plant, data: PlantUpdate) -> Plant:
-    for key, value in data.model_dump(exclude_none=True).items():
+    for key, value in data.model_dump(exclude_unset=True).items():
         setattr(plant, key, value)
     session.add(plant)
     await session.commit()
