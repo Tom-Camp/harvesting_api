@@ -79,8 +79,25 @@ async def get_care_info(
     plant = await plant_service.get_plant(session, plant_id)
     if not plant or plant.garden_id != access.garden.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plant not found")
-    return await get_plant_tips(
+
+    if plant.care_info:
+        await session.delete(plant.care_info)
+        await session.flush()
+
+    tips = await get_plant_tips(
         plant_type=plant.plant_type,
         variety=plant.variety,
         location=access.garden.location,
     )
+    care_info = CareInfo(
+        planting=tips.planting,
+        care=tips.care,
+        harvesting=tips.harvesting,
+        summary=tips.summary,
+        latin_name=tips.latin_name,
+        plant_id=plant.id,
+    )
+    session.add(care_info)
+    await session.commit()
+    await session.refresh(care_info)
+    return care_info

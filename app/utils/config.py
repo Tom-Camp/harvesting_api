@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     postgres_host: str = "localhost"
     postgres_port: int = 5432
 
-    gemini_api_key: str
+    anthropic_api_key: str
 
     admin_email: str | None = None
 
