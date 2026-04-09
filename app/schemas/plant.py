@@ -36,6 +36,7 @@ class PlantCreate(BaseModel):
     plant_type: PlantType
     species: str
     variety: str | None = None
+    plot: str | None = None
     planted_date: datetime | None = None
 
 
@@ -49,6 +50,7 @@ class PlantRead(BaseModel):
     variety: str | None = None
     notes: list[NoteRead] | None = None
     care_info: CareInfoRead | None
+    plot: str | None = None
     planted_date: datetime | None
     created_at: datetime
     updated_at: datetime
@@ -57,5 +59,6 @@ class PlantRead(BaseModel):
 class PlantUpdate(BaseModel):
     variety: str | None = None
     notes: str | None = None
+    plot: str | None = None
     planted_date: datetime | None = None
     care: CareInfo | None = None

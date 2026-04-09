@@ -50,6 +50,7 @@ class Plant(ModelBase, table=True):
     species: str
     variety: str | None = None
     planted_date: datetime | None = Field(sa_column=Column(DateTime(timezone=True), nullable=True))
+    plot: str | None = None
     notes: list[Note] = Relationship(back_populates="plant", cascade_delete=True)
     care_info: CareInfo | None = Relationship(back_populates="plant", cascade_delete=True)
     garden_id: uuid.UUID = Field(foreign_key="garden.id")
