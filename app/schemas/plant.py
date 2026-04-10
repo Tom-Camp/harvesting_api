@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.plant import CareInfo, PlantType
+from app.models.plant import CareInfo, NoteLabel, PlantType
 
 
 class NoteCreate(BaseModel):
@@ -15,6 +15,7 @@ class NoteRead(BaseModel):
 
     id: uuid.UUID
     note: str | None
+    label: NoteLabel
     created_at: datetime
     updated_at: datetime
 
