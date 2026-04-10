@@ -69,3 +69,23 @@ class PlantUpdate(BaseModel):
     plot: str | None = None
     planted_date: datetime | None = None
     care: CareInfo | None = None
+
+
+class HarvestCreate(BaseModel):
+    weight: float | None = None
+    quantity: int | None = None
+
+
+class HarvestUpdate(BaseModel):
+    weight: float | None = None
+    quantity: int | None = None
+
+
+class HarvestRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    weight: float | None = None
+    quantity: int | None = None
+    created_date: datetime
+    updated_date: datetime

@@ -42,6 +42,14 @@ class Note(ModelBase, table=True):
     plant: "Plant" = Relationship(back_populates="notes")
 
 
+class Harvest(ModelBase, table=True):
+
+    quantity: int | None
+    weight: float | None
+    plant_id: uuid.UUID = Field(foreign_key="plant.id")
+    plant: "Plant" = Relationship(back_populates="harvest")
+
+
 class CareInfo(ModelBase, table=True):
 
     planting: str | None
@@ -63,6 +71,7 @@ class Plant(ModelBase, table=True):
     planted_date: datetime | None = Field(sa_column=Column(DateTime(timezone=True), nullable=True))
     plot: str | None = None
     notes: list[Note] = Relationship(back_populates="plant", cascade_delete=True)
+    harvest: list[Harvest] = Relationship(back_populates="plant", cascade_delete=True)
     care_info: CareInfo | None = Relationship(back_populates="plant", cascade_delete=True)
     garden_id: uuid.UUID = Field(foreign_key="garden.id")
     garden: "Garden" = Relationship(back_populates="plants")
