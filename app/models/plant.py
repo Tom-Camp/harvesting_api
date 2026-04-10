@@ -24,9 +24,17 @@ class PlantType(str, Enum):
     VINE = "vine"
 
 
+class NoteLabel(str, Enum):
+    MILESTONE = "milestone"
+    PEST = "pest"
+    NOTE = "note"
+    ACTION = "action"
+
+
 class Note(ModelBase, table=True):
 
     note: str | None
+    label: NoteLabel = Field(default=NoteLabel.NOTE)
     plant_id: uuid.UUID = Field(foreign_key="plant.id")
     plant: "Plant" = Relationship(back_populates="notes")
 
