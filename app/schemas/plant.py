@@ -8,6 +8,12 @@ from app.models.plant import CareInfo, NoteLabel, PlantType
 
 class NoteCreate(BaseModel):
     note: str
+    label: NoteLabel = NoteLabel.NOTE
+
+
+class NoteUpdate(BaseModel):
+    note: str | None = None
+    label: NoteLabel | None = None
 
 
 class NoteRead(BaseModel):

@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
-from app.models.plant import Plant
-from app.schemas.plant import PlantCreate, PlantUpdate
+from app.models.plant import Note, Plant
+from app.schemas.plant import NoteCreate, NoteUpdate, PlantCreate, PlantUpdate
 
 
 def _plant_query(plant_id: UUID | None = None):
@@ -44,4 +44,31 @@ async def update_plant(session: AsyncSession, plant: Plant, data: PlantUpdate) -
 
 async def delete_plant(session: AsyncSession, plant: Plant) -> None:
     await session.delete(plant)
+    await session.commit()
+
+
+async def create_note(session: AsyncSession, plant_id: UUID, data: NoteCreate) -> Note:
+    note = Note(plant_id=plant_id, **data.model_dump())
+    session.add(note)
+    await session.commit()
+    await session.refresh(note)
+    return note
+
+
+async def get_note(session: AsyncSession, note_id: UUID) -> Note | None:
+    result = await session.execute(select(Note).where(Note.id == note_id))
+    return result.scalar_one_or_none()
+
+
+async def update_note(session: AsyncSession, note: Note, data: NoteUpdate) -> Note:
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(note, key, value)
+    session.add(note)
+    await session.commit()
+    await session.refresh(note)
+    return note
+
+
+async def delete_note(session: AsyncSession, note: Note) -> None:
+    await session.delete(note)
     await session.commit()
