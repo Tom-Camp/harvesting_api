@@ -4,12 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
-from app.models.plant import Note, Plant
-from app.schemas.plant import NoteCreate, NoteUpdate, PlantCreate, PlantUpdate
+from app.models.plant import Harvest, Note, Plant
+from app.schemas.plant import HarvestCreate, HarvestUpdate, NoteCreate, NoteUpdate, PlantCreate, PlantUpdate
 
 
 def _plant_query(plant_id: UUID | None = None):
-    q = select(Plant).options(selectinload(Plant.notes), selectinload(Plant.care_info))  # type: ignore[arg-type]
+    q = select(Plant).options(selectinload(Plant.notes), selectinload(Plant.harvest), selectinload(Plant.care_info))  # type: ignore[arg-type]
     if plant_id is not None:
         q = q.where(Plant.id == plant_id)
     return q
@@ -71,4 +71,31 @@ async def update_note(session: AsyncSession, note: Note, data: NoteUpdate) -> No
 
 async def delete_note(session: AsyncSession, note: Note) -> None:
     await session.delete(note)
+    await session.commit()
+
+
+async def create_harvest(session: AsyncSession, plant_id: UUID, data: HarvestCreate) -> Harvest:
+    harvest = Harvest(plant_id=plant_id, **data.model_dump())
+    session.add(harvest)
+    await session.commit()
+    await session.refresh(harvest)
+    return harvest
+
+
+async def get_harvest(session: AsyncSession, harvest_id: UUID) -> Harvest | None:
+    result = await session.execute(select(Harvest).where(Harvest.id == harvest_id))
+    return result.scalar_one_or_none()
+
+
+async def update_harvest(session: AsyncSession, harvest: Harvest, data: HarvestUpdate) -> Harvest:
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(harvest, key, value)
+    session.add(harvest)
+    await session.commit()
+    await session.refresh(harvest)
+    return harvest
+
+
+async def delete_harvest(session: AsyncSession, harvest: Harvest) -> None:
+    await session.delete(harvest)
     await session.commit()

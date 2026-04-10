@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.plant import CareInfo, NoteLabel, PlantType
+from app.models.plant import CareInfo, Harvest, NoteLabel, PlantType
 
 
 class NoteCreate(BaseModel):
@@ -56,6 +56,7 @@ class PlantRead(BaseModel):
     species: str
     variety: str | None = None
     notes: list[NoteRead] | None = None
+    harvest: list[HarvestRead] | None = None
     care_info: CareInfoRead | None
     plot: str | None = None
     planted_date: datetime | None
@@ -87,5 +88,5 @@ class HarvestRead(BaseModel):
     id: uuid.UUID
     weight: float | None = None
     quantity: int | None = None
-    created_date: datetime
-    updated_date: datetime
+    created_at: datetime
+    updated_at: datetime
