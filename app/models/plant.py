@@ -34,7 +34,10 @@ class NoteLabel(str, Enum):
 class Note(ModelBase, table=True):
 
     note: str | None
-    label: NoteLabel = Field(default=NoteLabel.NOTE)
+    label: NoteLabel = Field(
+        default=NoteLabel.NOTE,
+        sa_column=Column(SAEnum(NoteLabel, values_callable=lambda x: [e.value for e in x]), nullable=False),
+    )
     plant_id: uuid.UUID = Field(foreign_key="plant.id")
     plant: "Plant" = Relationship(back_populates="notes")
 
