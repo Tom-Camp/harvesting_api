@@ -1,0 +1,116 @@
+import uuid
+
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.garden import Garden
+from app.models.garden_member import GardenMember, GardenMemberRole
+from app.models.user import User
+
+
+async def test_list_members(client: AsyncClient, test_garden: Garden):
+    response = await client.get(f"/api/v1/gardens/{test_garden.slug}/members")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["role"] == "owner"
+
+
+async def test_list_members_not_a_member(second_client: AsyncClient, test_garden: Garden):
+    response = await second_client.get(f"/api/v1/gardens/{test_garden.slug}/members")
+    assert response.status_code == 403
+
+
+async def test_invite_member(client: AsyncClient, test_garden: Garden):
+    response = await client.post(
+        f"/api/v1/gardens/{test_garden.slug}/members/invite",
+        json={"email": "newuser@example.com"},
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["invited_email"] == "newuser@example.com"
+    assert "token" in data
+
+
+async def test_invite_member_non_owner_forbidden(
+    session: AsyncSession, second_user: User, test_garden: Garden, second_client: AsyncClient
+):
+    session.add(GardenMember(garden_id=test_garden.id, user_id=second_user.id, role=GardenMemberRole.MEMBER))
+    await session.commit()
+
+    response = await second_client.post(
+        f"/api/v1/gardens/{test_garden.slug}/members/invite",
+        json={"email": "someone@example.com"},
+    )
+    assert response.status_code == 403
+
+
+async def test_remove_member(
+    session: AsyncSession, second_user: User, test_garden: Garden, client: AsyncClient
+):
+    session.add(GardenMember(garden_id=test_garden.id, user_id=second_user.id, role=GardenMemberRole.MEMBER))
+    await session.commit()
+
+    response = await client.delete(
+        f"/api/v1/gardens/{test_garden.slug}/members/{second_user.id}"
+    )
+    assert response.status_code == 204
+
+
+async def test_remove_member_not_found(client: AsyncClient, test_garden: Garden):
+    response = await client.delete(
+        f"/api/v1/gardens/{test_garden.slug}/members/{uuid.uuid4()}"
+    )
+    assert response.status_code == 404
+
+
+async def test_cannot_remove_owner(client: AsyncClient, test_garden: Garden, test_user: User):
+    response = await client.delete(
+        f"/api/v1/gardens/{test_garden.slug}/members/{test_user.id}"
+    )
+    assert response.status_code == 400
+
+
+async def test_accept_invitation(
+    session: AsyncSession,
+    test_garden: Garden,
+    test_user: User,
+    second_user: User,
+    second_client: AsyncClient,
+):
+    from app.services import garden_member as member_service
+
+    invitation = await member_service.create_invitation(
+        session,
+        garden_id=test_garden.id,
+        invited_by_user_id=test_user.id,
+        email=second_user.email,
+    )
+    response = await second_client.post(f"/api/v1/invitations/{invitation.token}/accept")
+    assert response.status_code == 201
+    assert response.json()["role"] == "member"
+
+
+async def test_accept_invitation_not_found(second_client: AsyncClient):
+    response = await second_client.post("/api/v1/invitations/nonexistent-token/accept")
+    assert response.status_code == 404
+
+
+async def test_accept_invitation_already_accepted(
+    session: AsyncSession,
+    test_garden: Garden,
+    test_user: User,
+    second_user: User,
+    second_client: AsyncClient,
+):
+    from app.services import garden_member as member_service
+
+    invitation = await member_service.create_invitation(
+        session,
+        garden_id=test_garden.id,
+        invited_by_user_id=test_user.id,
+        email=second_user.email,
+    )
+    await second_client.post(f"/api/v1/invitations/{invitation.token}/accept")
+    response = await second_client.post(f"/api/v1/invitations/{invitation.token}/accept")
+    assert response.status_code == 400
