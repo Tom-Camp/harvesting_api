@@ -9,12 +9,32 @@ provider = AnthropicProvider(api_key=settings.anthropic_api_key)
 model = AnthropicModel("claude-haiku-4-5", provider=provider)
 
 
+class LatinNameOutput(BaseModel):
+    latin_name: str | None = None
+
+
 class PlantCareOutput(BaseModel):
     planting: str | None = None
     care: str | None = None
     harvesting: str | None = None
     summary: str | None = None
     latin_name: str | None = None
+
+
+async def get_latin_name(
+    plant_type: str,
+    species: str,
+    variety: str | None = None,
+) -> str | None:
+    plant_desc = f"{variety} {species}" if variety else species
+    agent: Agent = Agent(
+        model=model,
+        output_type=LatinNameOutput,
+        instructions="You are a botanist. Return only the scientific Latin name for the given plant.",
+        retries=3,
+    )
+    result = await agent.run(user_prompt=f"What is the scientific Latin name for {plant_desc} ({plant_type})?")
+    return result.output.latin_name
 
 
 def get_prompt(plant: str, location: str) -> str:
