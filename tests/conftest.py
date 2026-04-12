@@ -3,6 +3,7 @@ import os
 os.environ.setdefault("POSTGRES_USER", "test")
 os.environ.setdefault("POSTGRES_PASSWORD", "test")
 os.environ.setdefault("POSTGRES_DB", "test")
+os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 os.environ.setdefault("GEMINI_API_KEY", "test-key")
 os.environ.setdefault("GOOGLE_CLIENT_ID", "test-client-id")
 os.environ.setdefault("GOOGLE_CLIENT_SECRET", "test-secret")

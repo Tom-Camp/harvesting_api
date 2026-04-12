@@ -55,6 +55,7 @@ class PlantRead(BaseModel):
     plant_type: PlantType
     species: str
     variety: str | None = None
+    latin_name: str | None = None
     notes: list[NoteRead] | None = None
     harvest: list[HarvestRead] | None = None
     care_info: CareInfoRead | None

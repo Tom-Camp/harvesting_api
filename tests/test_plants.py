@@ -1,4 +1,5 @@
 import uuid
+from unittest.mock import AsyncMock, patch
 
 from httpx import AsyncClient
 
@@ -23,10 +24,11 @@ async def test_list_plants(client: AsyncClient, test_garden: Garden, test_plant:
 
 
 async def test_add_plant(client: AsyncClient, test_garden: Garden):
-    response = await client.post(
-        f"/api/v1/gardens/{test_garden.slug}/plants",
-        json={"plant_type": "vegetable", "species": "pepper", "variety": "bell"},
-    )
+    with patch("app.api.v1.plants.get_latin_name", new=AsyncMock(return_value="Capsicum annuum")):
+        response = await client.post(
+            f"/api/v1/gardens/{test_garden.slug}/plants",
+            json={"plant_type": "vegetable", "species": "pepper", "variety": "bell"},
+        )
     assert response.status_code == 201
     data = response.json()
     assert data["plant_type"] == "vegetable"
@@ -82,9 +84,10 @@ async def test_member_can_add_plant(
     session.add(GardenMember(garden_id=test_garden.id, user_id=second_user.id, role=GardenMemberRole.MEMBER))
     await session.commit()
 
-    response = await second_client.post(
-        f"/api/v1/gardens/{test_garden.slug}/plants",
-        json={"plant_type": "herb", "species": "basil"},
-    )
+    with patch("app.api.v1.plants.get_latin_name", new=AsyncMock(return_value="Ocimum basilicum")):
+        response = await second_client.post(
+            f"/api/v1/gardens/{test_garden.slug}/plants",
+            json={"plant_type": "herb", "species": "basil"},
+        )
     assert response.status_code == 201
     assert response.json()["species"] == "basil"
