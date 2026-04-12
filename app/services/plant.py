@@ -4,12 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
-from app.models.plant import Harvest, Note, Plant
+from app.models.plant import Harvest, Note, Plant, UnitType
 from app.schemas.plant import HarvestCreate, HarvestUpdate, NoteCreate, NoteUpdate, PlantCreate, PlantUpdate
 
 
 def _plant_query(plant_id: UUID | None = None):
-    q = select(Plant).options(selectinload(Plant.notes), selectinload(Plant.harvest), selectinload(Plant.care_info))  # type: ignore[arg-type]
+    q = select(Plant).options(selectinload(Plant.notes), selectinload(Plant.harvests), selectinload(Plant.care_info))  # type: ignore[arg-type]
     if plant_id is not None:
         q = q.where(Plant.id == plant_id)
     return q
@@ -74,8 +74,13 @@ async def delete_note(session: AsyncSession, note: Note) -> None:
     await session.commit()
 
 
-async def create_harvest(session: AsyncSession, plant_id: UUID, data: HarvestCreate) -> Harvest:
-    harvest = Harvest(plant_id=plant_id, **data.model_dump())
+async def create_harvest(session: AsyncSession, plant: Plant, data: HarvestCreate) -> Harvest:
+    if plant.harvest_unit is None:
+        plant.harvest_unit = data.unit
+        session.add(plant)
+    elif plant.harvest_unit != data.unit:
+        raise ValueError(f"This plant's harvests are tracked in {plant.harvest_unit.value}")
+    harvest = Harvest(plant_id=plant.id, **data.model_dump())
     session.add(harvest)
     await session.commit()
     await session.refresh(harvest)
