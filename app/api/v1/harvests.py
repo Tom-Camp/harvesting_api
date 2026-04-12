@@ -29,8 +29,11 @@ async def add_harvest(
     access: GardenAccess = Depends(require_garden_member),
     session: AsyncSession = Depends(get_session),
 ) -> HarvestRead:
-    await _get_plant_in_garden(plant_id, access, session)
-    harvest = await plant_service.create_harvest(session=session, plant_id=plant_id, data=data)
+    plant = await _get_plant_in_garden(plant_id, access, session)
+    try:
+        harvest = await plant_service.create_harvest(session=session, plant=plant, data=data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     return HarvestRead.model_validate(harvest)
 
 
@@ -42,10 +45,15 @@ async def update_harvest(
     access: GardenAccess = Depends(require_garden_member),
     session: AsyncSession = Depends(get_session),
 ) -> HarvestRead:
-    await _get_plant_in_garden(plant_id, access, session)
+    plant = await _get_plant_in_garden(plant_id, access, session)
     harvest = await plant_service.get_harvest(session, harvest_id)
     if not harvest or harvest.plant_id != plant_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Harvest not found")
+    if plant.harvest_unit and data.unit != plant.harvest_unit:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"This plant's harvests are tracked in {plant.harvest_unit.value}",
+        )
     harvest = await plant_service.update_harvest(session, harvest, data)
     return HarvestRead.model_validate(harvest)
 
