@@ -107,6 +107,7 @@ async def get_care_info(
 
     tips = await get_plant_tips(
         plant_type=plant.plant_type,
+        species=plant.species,
         variety=plant.variety,
         location=access.garden.location,
     )
