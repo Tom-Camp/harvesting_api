@@ -81,3 +81,27 @@ async def test_non_owner_cannot_update(
         f"/api/v1/gardens/{test_garden.slug}", json={"name": "Hijacked"}
     )
     assert response.status_code == 403
+
+
+async def test_delete_garden(client: AsyncClient, test_garden: Garden):
+    response = await client.delete(f"/api/v1/gardens/{test_garden.slug}")
+    assert response.status_code == 204
+
+    response = await client.get(f"/api/v1/gardens/{test_garden.slug}")
+    assert response.status_code == 404
+
+
+async def test_non_owner_cannot_delete_garden(
+    session, second_user: User, test_garden: Garden, second_client: AsyncClient
+):
+    from app.models.garden_member import GardenMember, GardenMemberRole
+    session.add(GardenMember(garden_id=test_garden.id, user_id=second_user.id, role=GardenMemberRole.MEMBER))
+    await session.commit()
+
+    response = await second_client.delete(f"/api/v1/gardens/{test_garden.slug}")
+    assert response.status_code == 403
+
+
+async def test_non_member_cannot_delete_garden(second_client: AsyncClient, test_garden: Garden):
+    response = await second_client.delete(f"/api/v1/gardens/{test_garden.slug}")
+    assert response.status_code == 403
