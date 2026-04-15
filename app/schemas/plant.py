@@ -83,6 +83,7 @@ class PlantRead(BaseModel):
     care_info: CareInfoRead | None
     plot: str | None = None
     planted_date: datetime | None
+    archived_at: datetime | None
     created_at: datetime
     updated_at: datetime
 

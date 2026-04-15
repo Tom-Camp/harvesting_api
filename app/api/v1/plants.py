@@ -34,10 +34,11 @@ router = APIRouter(prefix="/gardens/{slug}/plants", tags=["plants"])
 
 @router.get("", response_model=list[PlantRead])
 async def list_plants(
+    archived: bool = False,
     access: GardenAccess = Depends(require_garden_member),
     session: AsyncSession = Depends(get_session),
 ) -> list[PlantRead]:
-    plants = await plant_service.get_plants(session=session, garden_id=access.garden.id)
+    plants = await plant_service.get_plants(session=session, garden_id=access.garden.id, archived=archived)
     return [PlantRead.model_validate(p) for p in plants]
 
 
@@ -89,6 +90,32 @@ async def delete_plant(
     if not plant or plant.garden_id != access.garden.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plant not found")
     await plant_service.delete_plant(session, plant)
+
+
+@router.post("/{plant_id}/archive", response_model=PlantRead)
+async def archive_plant(
+    plant_id: uuid.UUID,
+    access: GardenAccess = Depends(require_garden_member),
+    session: AsyncSession = Depends(get_session),
+) -> PlantRead:
+    plant = await plant_service.get_plant(session, plant_id)
+    if not plant or plant.garden_id != access.garden.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plant not found")
+    plant = await plant_service.archive_plant(session, plant)
+    return PlantRead.model_validate(plant)
+
+
+@router.post("/{plant_id}/unarchive", response_model=PlantRead)
+async def unarchive_plant(
+    plant_id: uuid.UUID,
+    access: GardenAccess = Depends(require_garden_member),
+    session: AsyncSession = Depends(get_session),
+) -> PlantRead:
+    plant = await plant_service.get_plant(session, plant_id)
+    if not plant or plant.garden_id != access.garden.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plant not found")
+    plant = await plant_service.unarchive_plant(session, plant)
+    return PlantRead.model_validate(plant)
 
 
 @router.post("/{plant_id}/care", response_model=CareInfoRead)
