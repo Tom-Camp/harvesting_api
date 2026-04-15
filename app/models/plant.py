@@ -88,6 +88,7 @@ class Plant(ModelBase, table=True):
         sa_column=Column(SAEnum(UnitType, values_callable=lambda x: [e.value for e in x]), nullable=True),
     )
     planted_date: datetime | None = Field(sa_column=Column(DateTime(timezone=True), nullable=True))
+    archived_at: datetime | None = Field(sa_column=Column(DateTime(timezone=True), nullable=True))
     plot: str | None = None
     notes: list[Note] = Relationship(back_populates="plant", cascade_delete=True)
     harvests: list[Harvest] = Relationship(back_populates="plant", cascade_delete=True)

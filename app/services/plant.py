@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,8 +24,13 @@ async def create_plant(session: AsyncSession, garden_id: UUID, data: PlantCreate
     return result.scalar_one()
 
 
-async def get_plants(session: AsyncSession, garden_id: UUID) -> list[Plant]:
-    result = await session.execute(_plant_query().where(Plant.garden_id == garden_id))
+async def get_plants(session: AsyncSession, garden_id: UUID, archived: bool = False) -> list[Plant]:
+    q = _plant_query().where(Plant.garden_id == garden_id)
+    if archived:
+        q = q.where(Plant.archived_at.is_not(None))  # type: ignore[union-attr]
+    else:
+        q = q.where(Plant.archived_at.is_(None))  # type: ignore[union-attr]
+    result = await session.execute(q)
     return list(result.scalars().all())
 
 
@@ -45,6 +51,22 @@ async def update_plant(session: AsyncSession, plant: Plant, data: PlantUpdate) -
 async def delete_plant(session: AsyncSession, plant: Plant) -> None:
     await session.delete(plant)
     await session.commit()
+
+
+async def archive_plant(session: AsyncSession, plant: Plant) -> Plant:
+    plant.archived_at = datetime.now(timezone.utc)
+    session.add(plant)
+    await session.commit()
+    result = await session.execute(_plant_query(plant.id))
+    return result.scalar_one()
+
+
+async def unarchive_plant(session: AsyncSession, plant: Plant) -> Plant:
+    plant.archived_at = None
+    session.add(plant)
+    await session.commit()
+    result = await session.execute(_plant_query(plant.id))
+    return result.scalar_one()
 
 
 async def create_note(session: AsyncSession, plant_id: UUID, data: NoteCreate) -> Note:
