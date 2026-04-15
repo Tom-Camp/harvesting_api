@@ -71,6 +71,22 @@ async def test_cannot_remove_owner(client: AsyncClient, test_garden: Garden, tes
     assert response.status_code == 400
 
 
+async def test_non_owner_cannot_remove_member(
+    session: AsyncSession,
+    second_user: User,
+    test_garden: Garden,
+    test_user: User,
+    second_client: AsyncClient,
+):
+    session.add(GardenMember(garden_id=test_garden.id, user_id=second_user.id, role=GardenMemberRole.MEMBER))
+    await session.commit()
+
+    response = await second_client.delete(
+        f"/api/v1/gardens/{test_garden.slug}/members/{test_user.id}"
+    )
+    assert response.status_code == 403
+
+
 async def test_accept_invitation(
     session: AsyncSession,
     test_garden: Garden,
