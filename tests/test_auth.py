@@ -18,18 +18,18 @@ async def test_register_duplicate_email(unauthed_client: AsyncClient):
     assert response.status_code == 409
 
 
-async def test_register_password_too_short(unauthed_client: AsyncClient):
+async def test_register_password_too_weak(unauthed_client: AsyncClient):
     response = await unauthed_client.post(
         "/api/v1/auth/register",
-        json={"email": "short@example.com", "password": "Short1!"},
+        json={"email": "weak@example.com", "password": "password123"},
     )
     assert response.status_code == 422
 
 
-async def test_register_password_all_lowercase(unauthed_client: AsyncClient):
+async def test_register_password_common_pattern(unauthed_client: AsyncClient):
     response = await unauthed_client.post(
         "/api/v1/auth/register",
-        json={"email": "weak@example.com", "password": "alllowercasepassword"},
+        json={"email": "weak2@example.com", "password": "Short1!"},
     )
     assert response.status_code == 422
 

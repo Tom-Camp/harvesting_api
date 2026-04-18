@@ -152,6 +152,6 @@ async def test_reset_password_weak_password(unauthed_client: AsyncClient, sessio
 
     response = await unauthed_client.post(
         "/api/v1/auth/reset-password",
-        json={"token": token.token, "password": "short"},
+        json={"token": token.token, "password": "password123"},
     )
     assert response.status_code == 422
