@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
 ENV UV_PROJECT_ENVIRONMENT=/tmp/venv
+ENV UV_CACHE_DIR=/tmp/uv-cache
+
 RUN uv sync --no-dev
 
 COPY . .
