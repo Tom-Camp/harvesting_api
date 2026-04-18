@@ -14,6 +14,10 @@ class Settings(BaseSettings):
 
     anthropic_api_key: str
 
+    resend_api_key: str = ""
+    resend_from_email: str = "noreply@harvesting.food"
+    app_base_url: str = "http://localhost:8000"
+
     admin_email: str | None = None
 
     jwt_secret: str
