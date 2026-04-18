@@ -1,16 +1,17 @@
-FROM python:3.14-slim
-
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+FROM ghcr.io/civicactions/pyction:latest
 
 WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+ENV UV_PROJECT_ENVIRONMENT=/tmp/venv
+RUN uv sync --no-dev
 
 COPY . .
-RUN uv sync --frozen --no-dev
+RUN chmod +x entrypoint.sh
 
-RUN groupadd --system app && useradd --system --gid app app
-USER app
+RUN useradd -m -u 1001 appuser && chown -R appuser:appuser /app
+USER appuser
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8000
+
+ENTRYPOINT ["./entrypoint.sh"]

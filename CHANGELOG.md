@@ -1,3 +1,10 @@
+## v1.0.1 (2026-04-18)
+
+### Fix
+
+- **Dockerfile**: add user
+- **dockerfile**: updating dockerfile and docker-compose
+
 ## v1.0.0 (2026-04-18)
 
 ### Feat
