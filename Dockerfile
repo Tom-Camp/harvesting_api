@@ -12,7 +12,7 @@ RUN chmod +x entrypoint.sh
 RUN groupadd -g 1001 app && useradd -m -u 1001 -g app app && chown -R app:app /app
 USER app
 
-ENV UV_CACHE_DIR=/tmp/uv-cache
+ENV UV_NO_CACHE=1
 
 EXPOSE 8000
 
