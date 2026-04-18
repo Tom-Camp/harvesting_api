@@ -10,10 +10,11 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY . .
 RUN uv sync --frozen --no-dev
 
+RUN chmod +x entrypoint.sh
+
 RUN groupadd --system app && useradd --system --gid app app
 USER app
 
-RUN chmod +x entrypoint.sh
 
 EXPOSE 8000
 
