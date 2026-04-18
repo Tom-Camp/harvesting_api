@@ -1,6 +1,8 @@
 services:
   api:
     image: t0mc4mp/harvesting.food.api:latest
+    environment:
+      - UV_CACHE_DIR=/tmp/uv-cache
     env_file:
       - ./prod.env
     ports:

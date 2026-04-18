@@ -12,5 +12,5 @@ COPY . .
 RUN chmod +x entrypoint.sh
 
 EXPOSE 8000
-
+USER nobody
 ENTRYPOINT ["./entrypoint.sh"]
