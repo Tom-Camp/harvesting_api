@@ -1,4 +1,5 @@
 import uuid
+from unittest.mock import AsyncMock, patch
 
 from httpx import AsyncClient
 
@@ -23,10 +24,11 @@ async def test_list_plants(client: AsyncClient, test_garden: Garden, test_plant:
 
 
 async def test_add_plant(client: AsyncClient, test_garden: Garden):
-    response = await client.post(
-        f"/api/v1/gardens/{test_garden.slug}/plants",
-        json={"plant_type": "vegetable", "species": "pepper", "variety": "bell"},
-    )
+    with patch("app.api.v1.plants.get_latin_name", new=AsyncMock(return_value="Capsicum annuum")):
+        response = await client.post(
+            f"/api/v1/gardens/{test_garden.slug}/plants",
+            json={"plant_type": "vegetable", "species": "pepper", "variety": "bell"},
+        )
     assert response.status_code == 201
     data = response.json()
     assert data["plant_type"] == "vegetable"
@@ -75,6 +77,104 @@ async def test_plants_require_active_account(pending_client: AsyncClient, test_g
     assert response.status_code == 403
 
 
+async def test_archive_plant(client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    response = await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/archive")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["archived_at"] is not None
+
+
+async def test_archive_plant_hidden_from_active_list(client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/archive")
+
+    response = await client.get(f"/api/v1/gardens/{test_garden.slug}/plants")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+async def test_archived_plants_visible_with_filter(client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/archive")
+
+    response = await client.get(f"/api/v1/gardens/{test_garden.slug}/plants?archived=true")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["id"] == str(test_plant.id)
+
+
+async def test_unarchive_plant(client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/archive")
+
+    response = await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/unarchive")
+    assert response.status_code == 200
+    assert response.json()["archived_at"] is None
+
+    response = await client.get(f"/api/v1/gardens/{test_garden.slug}/plants")
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
+
+async def test_archive_plant_not_found(client: AsyncClient, test_garden: Garden):
+    response = await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{uuid.uuid4()}/archive")
+    assert response.status_code == 404
+
+
+async def test_unarchive_plant_not_found(client: AsyncClient, test_garden: Garden):
+    response = await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{uuid.uuid4()}/unarchive")
+    assert response.status_code == 404
+
+
+async def test_archive_already_archived_plant(client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/archive")
+    response = await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/archive")
+    assert response.status_code == 200
+    assert response.json()["archived_at"] is not None
+
+
+async def test_unarchive_plant_not_archived(client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    response = await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/unarchive")
+    assert response.status_code == 200
+    assert response.json()["archived_at"] is None
+
+
+async def test_archived_plant_retrievable_by_id(client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/archive")
+    response = await client.get(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}")
+    assert response.status_code == 200
+    assert response.json()["archived_at"] is not None
+
+
+async def test_active_and_archived_plants_separated(
+    client: AsyncClient, test_garden: Garden, test_plant: Plant, session
+):
+    active_plant = Plant(garden_id=test_garden.id, plant_type="herb", species="basil")
+    session.add(active_plant)
+    await session.commit()
+
+    await client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/archive")
+
+    active_response = await client.get(f"/api/v1/gardens/{test_garden.slug}/plants")
+    assert active_response.status_code == 200
+    active_ids = [p["id"] for p in active_response.json()]
+    assert str(active_plant.id) in active_ids
+    assert str(test_plant.id) not in active_ids
+
+    archived_response = await client.get(f"/api/v1/gardens/{test_garden.slug}/plants?archived=true")
+    assert archived_response.status_code == 200
+    archived_ids = [p["id"] for p in archived_response.json()]
+    assert str(test_plant.id) in archived_ids
+    assert str(active_plant.id) not in archived_ids
+
+
+async def test_non_member_cannot_archive_plant(
+    session, second_user: User, test_garden: Garden, test_plant: Plant, second_client: AsyncClient
+):
+    response = await second_client.post(
+        f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/archive"
+    )
+    assert response.status_code in (403, 404)
+
+
 async def test_member_can_add_plant(
     session, second_user: User, test_garden: Garden, second_client: AsyncClient
 ):
@@ -82,9 +182,10 @@ async def test_member_can_add_plant(
     session.add(GardenMember(garden_id=test_garden.id, user_id=second_user.id, role=GardenMemberRole.MEMBER))
     await session.commit()
 
-    response = await second_client.post(
-        f"/api/v1/gardens/{test_garden.slug}/plants",
-        json={"plant_type": "herb", "species": "basil"},
-    )
+    with patch("app.api.v1.plants.get_latin_name", new=AsyncMock(return_value="Ocimum basilicum")):
+        response = await second_client.post(
+            f"/api/v1/gardens/{test_garden.slug}/plants",
+            json={"plant_type": "herb", "species": "basil"},
+        )
     assert response.status_code == 201
     assert response.json()["species"] == "basil"

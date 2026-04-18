@@ -3,11 +3,17 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.plant import CareInfo, PlantType
+from app.models.plant import CareInfo, NoteLabel, PlantType, UnitType
 
 
 class NoteCreate(BaseModel):
     note: str
+    label: NoteLabel = NoteLabel.NOTE
+
+
+class NoteUpdate(BaseModel):
+    note: str | None = None
+    label: NoteLabel | None = None
 
 
 class NoteRead(BaseModel):
@@ -15,6 +21,7 @@ class NoteRead(BaseModel):
 
     id: uuid.UUID
     note: str | None
+    label: NoteLabel
     created_at: datetime
     updated_at: datetime
 
@@ -32,10 +39,32 @@ class CareInfoRead(BaseModel):
     updated_at: datetime
 
 
+class HarvestCreate(BaseModel):
+    amount: int
+    unit: UnitType
+
+
+class HarvestUpdate(BaseModel):
+    created_at: datetime
+    amount: int
+    unit: UnitType
+
+
+class HarvestRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    amount: int
+    unit: UnitType
+    created_at: datetime
+    updated_at: datetime
+
+
 class PlantCreate(BaseModel):
     plant_type: PlantType
     species: str
     variety: str | None = None
+    plot: str | None = None
     planted_date: datetime | None = None
 
 
@@ -47,9 +76,14 @@ class PlantRead(BaseModel):
     plant_type: PlantType
     species: str
     variety: str | None = None
+    latin_name: str | None = None
+    harvest_unit: UnitType | None = None
     notes: list[NoteRead] | None = None
+    harvests: list[HarvestRead] | None = None
     care_info: CareInfoRead | None
+    plot: str | None = None
     planted_date: datetime | None
+    archived_at: datetime | None
     created_at: datetime
     updated_at: datetime
 
@@ -57,5 +91,6 @@ class PlantRead(BaseModel):
 class PlantUpdate(BaseModel):
     variety: str | None = None
     notes: str | None = None
+    plot: str | None = None
     planted_date: datetime | None = None
     care: CareInfo | None = None
