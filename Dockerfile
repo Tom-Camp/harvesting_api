@@ -9,7 +9,7 @@ RUN uv sync --no-dev
 COPY . .
 RUN chmod +x entrypoint.sh
 
-RUN chown -R app:app /app /tmp/venv
+RUN chown -R app:app /app
 USER app
 
 EXPOSE 8000
