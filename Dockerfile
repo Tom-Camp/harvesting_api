@@ -9,8 +9,8 @@ RUN uv sync --no-dev
 COPY . .
 RUN chmod +x entrypoint.sh
 
-RUN useradd -m -u 1001 appuser && chown -R appuser:appuser /app
-USER appuser
+RUN chown -R app:app /app /tmp/venv
+USER app
 
 EXPOSE 8000
 

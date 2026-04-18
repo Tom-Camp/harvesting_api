@@ -1,3 +1,9 @@
+## v1.0.2 (2026-04-18)
+
+### Fix
+
+- **Dockerfile**: fixing perms for docker
+
 ## v1.0.1 (2026-04-18)
 
 ### Fix
