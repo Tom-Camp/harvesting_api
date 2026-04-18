@@ -1,6 +1,7 @@
 from app.models.base import ModelBase
 from app.models.garden import Garden
 from app.models.garden_member import GardenInvitation, GardenMember
+from app.models.password_reset import PasswordResetToken
 from app.models.plant import Plant
 from app.models.user import User
 
@@ -10,5 +11,6 @@ Garden.model_rebuild()
 Plant.model_rebuild()
 GardenMember.model_rebuild()
 GardenInvitation.model_rebuild()
+PasswordResetToken.model_rebuild()
 
-__all__ = ["Garden", "GardenInvitation", "GardenMember", "ModelBase", "Plant", "User"]
+__all__ = ["Garden", "GardenInvitation", "GardenMember", "ModelBase", "PasswordResetToken", "Plant", "User"]

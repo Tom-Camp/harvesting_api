@@ -111,5 +111,5 @@ async def test_harvest_appears_on_plant(client: AsyncClient, test_garden: Garden
     )
     response = await client.get(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}")
     assert response.status_code == 200
-    harvests = response.json()["harvest"]
+    harvests = response.json()["harvests"]
     assert any(h["amount"] == 7 for h in harvests)
