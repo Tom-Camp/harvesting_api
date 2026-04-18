@@ -12,9 +12,12 @@ RUN uv sync --frozen --no-dev
 
 RUN chmod +x entrypoint.sh
 
-RUN groupadd --system app && useradd --system --gid app app
+RUN groupadd --system app && useradd --system --gid app --no-create-home --home /app app \
+    && chown -R app:app /app
+
 USER app
 
+ENV HOME=/app
 
 EXPOSE 8000
 
