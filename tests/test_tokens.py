@@ -25,7 +25,7 @@ def test_decode_access_token_wrong_secret():
         "iat": datetime.now(timezone.utc),
         "exp": datetime.now(timezone.utc) + timedelta(minutes=60),
     }
-    bad_token = jwt.encode(payload, "wrong-secret", algorithm="HS256")
+    bad_token = jwt.encode(payload, "wrong-secret-that-is-long-enough-for-hs256", algorithm="HS256")
     with pytest.raises(jwt.PyJWTError):
         decode_access_token(bad_token)
 

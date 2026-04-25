@@ -9,41 +9,59 @@ resources based on the user's role within the organization.
 
 ## Matrix
 
-### Roles and Permissions
+Admins receive a synthetic Owner membership on any garden, giving them full access regardless of 
+explicit membership.
 
-| Permission                      | Admin | User | Unauthenticated |
-|---------------------------------|-------|------|-----------------|
-| Create Garden                   | ✅     | ✅    | ❌               |
-| Edit own Garden                 | ✅     | ✅    | N/A             |
-| Edit any Garden                 | ✅     | ❌    | ❌               |
-| Delete own Garden               | ✅     | ✅    | N/A             |
-| Delete any Garden               | ✅     | ❌    | ❌               |
-| View own Garden                 | ✅     | ✅    | N/A             |
-| View any Garden                 | ✅     | ✅    | ❌               |
-| View public Gardens             | ✅     | ✅    | ✅               |
-| Update own Garden               | ✅     | ✅    | N/A             |
-| Update any Garden               | ✅     | ❌    | ❌               |
-| Create Plant in own Garden      | ✅     | ✅    | N/A             |
-| Create Plant in any Garden      | ✅     | ❌    | ❌               |
-| View own Plant                  | ✅     | ✅    | N/A             |
-| View any Plant                  | ✅     | ✅    | ❌               |
-| View any Plant in public Garden | ✅     | ✅    | ✅               |
-| Update own Plant                | ✅     | ✅    | N/A             |
-| Update any Plant                | ✅     | ❌    | ❌               |
-| Delete own Plant                | ✅     | ✅    | N/A             |
-| Delete any Plant                | ✅     | ❌    | ❌               |
-| Generate AI Plant Description   | ✅     | ✅    | ❌               |
+### System Role Permissions
+
+| Permission              | Admin | User (member) | Unauthenticated |
+|-------------------------|-------|---------------|-----------------|
+| Create Garden           | Y     | Y             | N               |
+| List accessible Gardens | Y     | Y             | N               |
+| View Garden             | Y     | Y             | N               |
+| Update Garden           | Y     | Owner only    | N               |
+| Delete Garden           | Y     | Owner only    | N               |
+| List Garden Members     | Y     | Y             | N               |
+| Invite Member           | Y     | Owner only    | N               |
+| Remove Member           | Y     | Owner only    | N               |
+| Accept Invitation       | Y     | Y             | N               |
+| List Plants             | Y     | Y             | N               |
+| Create Plant            | Y     | Y             | N               |
+| View Plant              | Y     | Y             | N               |
+| Update Plant            | Y     | Y             | N               |
+| Archive / Unarchive Plant | Y   | Y             | N               |
+| Delete Plant            | Y     | Owner only    | N               |
+| Generate AI Care Info   | Y     | Y             | N               |
+| Add Harvest             | Y     | Y             | N               |
+| Update Harvest          | Y     | Y             | N               |
+| Delete Harvest          | Y     | Y             | N               |
+| Add Note                | Y     | Y             | N               |
+| Update Note             | Y     | Y             | N               |
+| Delete Note             | Y     | Y             | N               |
 
 
-# Garden Guest Member Permissions
+## Garden Member Permissions
 
-| Permission                                         | Guest  |
-|----------------------------------------------------|--------|
-| View membership Garden                             | ✅      |
-| Update membership Garden                           | ❌      |
-| Delete membership Garden                           | ❌      |
-| Create Plant in membership Garden                  | ✅      |
-| View Plant in membership Garden                    | ✅      |
-| Update Plant in membership Garden                  | ✅      |
-| Delete Plant in membership Garden                  | ❌      |
-| Generate AI Plant Description in membership Garden | ✅      |
+Garden members have one of two roles: `owner` or `member`.
+
+| Permission                | Owner | Member |
+|---------------------------|-------|--------|
+| View Garden               | Y     | Y      |
+| Update Garden             | Y     | N      |
+| Delete Garden             | Y     | N      |
+| List Members              | Y     | Y      |
+| Invite Member             | Y     | N      |
+| Remove Member             | Y     | N      |
+| List Plants               | Y     | Y      |
+| Create Plant              | Y     | Y      |
+| View Plant                | Y     | Y      |
+| Update Plant              | Y     | Y      |
+| Archive / Unarchive Plant | Y     | Y      |
+| Delete Plant              | Y     | N      |
+| Generate AI Care Info     | Y     | Y      |
+| Add Harvest               | Y     | Y      |
+| Update Harvest            | Y     | Y      |
+| Delete Harvest            | Y     | Y      |
+| Add Note                  | Y     | Y      |
+| Update Note               | Y     | Y      |
+| Delete Note               | Y     | Y      |

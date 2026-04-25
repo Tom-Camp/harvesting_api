@@ -21,6 +21,7 @@ class UserStatus(str, Enum):
 class UserRole(str, Enum):
     USER = "user"
     ADMIN = "admin"
+    UNAUTHENTICATED = "unauthenticated"
 
 
 class User(ModelBase, table=True):

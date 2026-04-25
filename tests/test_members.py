@@ -130,3 +130,31 @@ async def test_accept_invitation_already_accepted(
     await second_client.post(f"/api/v1/invitations/{invitation.token}/accept")
     response = await second_client.post(f"/api/v1/invitations/{invitation.token}/accept")
     assert response.status_code == 400
+
+
+async def test_member_can_list_members(member_client: AsyncClient, test_garden: Garden):
+    response = await member_client.get(f"/api/v1/gardens/{test_garden.slug}/members")
+    assert response.status_code == 200
+    assert len(response.json()) >= 1
+
+
+async def test_unauthenticated_cannot_list_members(unauthed_client: AsyncClient, test_garden: Garden):
+    response = await unauthed_client.get(f"/api/v1/gardens/{test_garden.slug}/members")
+    assert response.status_code == 401
+
+
+async def test_unauthenticated_cannot_invite_member(unauthed_client: AsyncClient, test_garden: Garden):
+    response = await unauthed_client.post(
+        f"/api/v1/gardens/{test_garden.slug}/members/invite",
+        json={"email": "someone@example.com"},
+    )
+    assert response.status_code == 401
+
+
+async def test_unauthenticated_cannot_remove_member(
+    unauthed_client: AsyncClient, test_garden: Garden, test_user: User
+):
+    response = await unauthed_client.delete(
+        f"/api/v1/gardens/{test_garden.slug}/members/{test_user.id}"
+    )
+    assert response.status_code == 401

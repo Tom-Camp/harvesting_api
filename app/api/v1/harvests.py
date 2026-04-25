@@ -33,7 +33,7 @@ async def add_harvest(
     try:
         harvest = await plant_service.create_harvest(session=session, plant=plant, data=data)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(e))
     return HarvestRead.model_validate(harvest)
 
 
@@ -51,7 +51,7 @@ async def update_harvest(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Harvest not found")
     if plant.harvest_unit and data.unit != plant.harvest_unit:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"This plant's harvests are tracked in {plant.harvest_unit.value}",
         )
     harvest = await plant_service.update_harvest(session, harvest, data)
