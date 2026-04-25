@@ -74,6 +74,12 @@ async def require_garden_member(
     garden = await garden_service.get_garden_by_slug(session, slug)
     if not garden:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Garden not found")
+    if user.role == UserRole.ADMIN:
+        return GardenAccess(
+            garden=garden,
+            member=GardenMember(garden_id=garden.id, user_id=user.id, role=GardenMemberRole.OWNER),
+            user=user,
+        )
     member = await member_service.get_membership(session, garden.id, user.id)
     if not member:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this garden")
