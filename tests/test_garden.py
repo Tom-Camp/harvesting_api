@@ -105,3 +105,50 @@ async def test_non_owner_cannot_delete_garden(
 async def test_non_member_cannot_delete_garden(second_client: AsyncClient, test_garden: Garden):
     response = await second_client.delete(f"/api/v1/gardens/{test_garden.slug}")
     assert response.status_code == 403
+
+
+async def test_member_can_view_garden(member_client: AsyncClient, test_garden: Garden):
+    response = await member_client.get(f"/api/v1/gardens/{test_garden.slug}")
+    assert response.status_code == 200
+    assert response.json()["slug"] == test_garden.slug
+
+
+async def test_admin_can_update_any_garden(admin_client: AsyncClient, test_garden: Garden):
+    response = await admin_client.patch(
+        f"/api/v1/gardens/{test_garden.slug}",
+        json={"name": "Admin Updated", "location": "Chicago, IL"},
+    )
+    assert response.status_code == 200
+    assert response.json()["name"] == "Admin Updated"
+
+
+async def test_admin_can_delete_any_garden(admin_client: AsyncClient, test_garden: Garden):
+    response = await admin_client.delete(f"/api/v1/gardens/{test_garden.slug}")
+    assert response.status_code == 204
+
+
+async def test_unauthenticated_cannot_create_garden(unauthed_client: AsyncClient):
+    response = await unauthed_client.post("/api/v1/gardens", json={"name": "Sneaky", "location": "Nowhere"})
+    assert response.status_code == 401
+
+
+async def test_unauthenticated_cannot_list_gardens(unauthed_client: AsyncClient):
+    response = await unauthed_client.get("/api/v1/gardens")
+    assert response.status_code == 401
+
+
+async def test_unauthenticated_cannot_get_garden(unauthed_client: AsyncClient, test_garden: Garden):
+    response = await unauthed_client.get(f"/api/v1/gardens/{test_garden.slug}")
+    assert response.status_code == 401
+
+
+async def test_unauthenticated_cannot_update_garden(unauthed_client: AsyncClient, test_garden: Garden):
+    response = await unauthed_client.patch(
+        f"/api/v1/gardens/{test_garden.slug}", json={"name": "Hijacked"}
+    )
+    assert response.status_code == 401
+
+
+async def test_unauthenticated_cannot_delete_garden(unauthed_client: AsyncClient, test_garden: Garden):
+    response = await unauthed_client.delete(f"/api/v1/gardens/{test_garden.slug}")
+    assert response.status_code == 401
