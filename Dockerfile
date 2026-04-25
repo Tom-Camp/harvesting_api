@@ -17,6 +17,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 RUN chmod +x entrypoint.sh
 
+RUN useradd --create-home --shell /bin/bash appuser
+USER appuser
+
 EXPOSE 8000
 
 ENTRYPOINT ["./entrypoint.sh"]
