@@ -1,12 +1,30 @@
-from uuid import uuid4, UUID
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, String, event, func, inspect
+from sqlalchemy.sql.type_api import TypeDecorator
 from sqlmodel import Field, SQLModel
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
+
+
+def _is_string_column(col_type: object) -> bool:
+    if isinstance(col_type, String):
+        return True
+    if isinstance(col_type, TypeDecorator) and isinstance(col_type.impl_instance, String):
+        return True
+    return False
+
+
+def _strip_strings(target: "ModelBase") -> None:
+    mapper = inspect(type(target))
+    for col in mapper.columns:
+        if _is_string_column(col.type):
+            value = getattr(target, col.key, None)
+            if isinstance(value, str):
+                setattr(target, col.key, value.strip())
 
 
 class ModelBase(SQLModel):
@@ -21,3 +39,9 @@ class ModelBase(SQLModel):
         sa_type=DateTime(timezone=True),
         sa_column_kwargs={"server_default": func.now(), "onupdate": _utcnow, "nullable": False},
     )
+
+
+@event.listens_for(ModelBase, "before_insert", propagate=True)
+@event.listens_for(ModelBase, "before_update", propagate=True)
+def _strip_on_write(_mapper, _connection, target: ModelBase) -> None:
+    _strip_strings(target)

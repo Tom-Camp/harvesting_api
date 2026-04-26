@@ -196,6 +196,25 @@ async def pending_client(engine, pending_user: User) -> AsyncGenerator[AsyncClie
 
 
 @pytest_asyncio.fixture
+async def member_client(
+    engine, session: AsyncSession, second_user: User, test_garden: Garden
+) -> AsyncGenerator[AsyncClient, None]:
+    """Client for second_user as an explicit MEMBER (not owner) of test_garden."""
+    session.add(GardenMember(garden_id=test_garden.id, user_id=second_user.id, role=GardenMemberRole.MEMBER))
+    await session.commit()
+
+    async def override_auth():
+        return second_user
+
+    app.dependency_overrides[get_session] = _session_override(engine)
+    app.dependency_overrides[get_current_user] = override_auth
+    app.dependency_overrides[require_active_user] = override_auth
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
 async def unauthed_client(engine) -> AsyncGenerator[AsyncClient, None]:
     app.dependency_overrides[get_session] = _session_override(engine)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:

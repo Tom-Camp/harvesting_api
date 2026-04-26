@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 from httpx import AsyncClient
 
+from app.ai.garden_advisor import PlantCareOutput
 from app.models.garden import Garden
 from app.models.plant import Plant
 from app.models.user import User
@@ -189,3 +190,115 @@ async def test_member_can_add_plant(
         )
     assert response.status_code == 201
     assert response.json()["species"] == "basil"
+
+
+async def test_member_can_update_plant(member_client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    response = await member_client.patch(
+        f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}",
+        json={"variety": "updated-by-member"},
+    )
+    assert response.status_code == 200
+    assert response.json()["variety"] == "updated-by-member"
+
+
+async def test_member_can_archive_plant(member_client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    response = await member_client.post(
+        f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/archive"
+    )
+    assert response.status_code == 200
+    assert response.json()["archived_at"] is not None
+
+
+async def test_member_can_unarchive_plant(member_client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    await member_client.post(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/archive")
+    response = await member_client.post(
+        f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/unarchive"
+    )
+    assert response.status_code == 200
+    assert response.json()["archived_at"] is None
+
+
+async def test_member_cannot_delete_plant(member_client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    response = await member_client.delete(
+        f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}"
+    )
+    assert response.status_code == 403
+
+
+async def test_non_member_cannot_list_plants(second_client: AsyncClient, test_garden: Garden):
+    response = await second_client.get(f"/api/v1/gardens/{test_garden.slug}/plants")
+    assert response.status_code == 403
+
+
+async def test_non_member_cannot_get_plant(second_client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    response = await second_client.get(f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}")
+    assert response.status_code == 403
+
+
+async def test_non_member_cannot_update_plant(
+    second_client: AsyncClient, test_garden: Garden, test_plant: Plant
+):
+    response = await second_client.patch(
+        f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}",
+        json={"variety": "hijacked"},
+    )
+    assert response.status_code == 403
+
+
+async def test_non_member_cannot_delete_plant(
+    second_client: AsyncClient, test_garden: Garden, test_plant: Plant
+):
+    response = await second_client.delete(
+        f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}"
+    )
+    assert response.status_code == 403
+
+
+async def test_unauthenticated_cannot_list_plants(unauthed_client: AsyncClient, test_garden: Garden):
+    response = await unauthed_client.get(f"/api/v1/gardens/{test_garden.slug}/plants")
+    assert response.status_code == 401
+
+
+async def test_unauthenticated_cannot_create_plant(unauthed_client: AsyncClient, test_garden: Garden):
+    response = await unauthed_client.post(
+        f"/api/v1/gardens/{test_garden.slug}/plants",
+        json={"plant_type": "herb", "species": "mint"},
+    )
+    assert response.status_code == 401
+
+
+_MOCK_CARE = PlantCareOutput(
+    planting="Plant 1cm deep",
+    care="Water weekly",
+    harvesting="Pick when ripe",
+    summary="Easy to grow",
+    latin_name="Solanum lycopersicum",
+)
+
+
+async def test_get_care_info(client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    with patch("app.api.v1.plants.get_plant_tips", new=AsyncMock(return_value=_MOCK_CARE)):
+        response = await client.post(
+            f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/care"
+        )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["latin_name"] == "Solanum lycopersicum"
+    assert data["summary"] == "Easy to grow"
+
+
+async def test_member_can_get_care_info(member_client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    with patch("app.api.v1.plants.get_plant_tips", new=AsyncMock(return_value=_MOCK_CARE)):
+        response = await member_client.post(
+            f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/care"
+        )
+    assert response.status_code == 200
+
+
+async def test_non_member_cannot_get_care_info(
+    second_client: AsyncClient, test_garden: Garden, test_plant: Plant
+):
+    response = await second_client.post(
+        f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/care"
+    )
+    assert response.status_code == 403

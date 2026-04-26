@@ -8,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.garden_advisor import get_latin_name, get_plant_tips
-from app.auth.dependencies import GardenAccess, require_garden_member
+from app.auth.dependencies import GardenAccess, require_garden_member, require_garden_owner
 from app.db import _SessionLocal, get_session
 from app.models.plant import CareInfo
 from app.schemas.plant import CareInfoRead, PlantCreate, PlantRead, PlantUpdate
@@ -83,7 +83,7 @@ async def update_plant(
 @router.delete("/{plant_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_plant(
     plant_id: uuid.UUID,
-    access: GardenAccess = Depends(require_garden_member),
+    access: GardenAccess = Depends(require_garden_owner),
     session: AsyncSession = Depends(get_session),
 ) -> None:
     plant = await plant_service.get_plant(session, plant_id)
