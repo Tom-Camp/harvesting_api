@@ -17,10 +17,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 RUN chmod +x entrypoint.sh
 
-RUN useradd --create-home --shell /bin/bash appuser
+RUN useradd --create-home --shell /bin/bash appuser && \
+    chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
 
 ENTRYPOINT ["./entrypoint.sh"]
-CMD ["uv", "run", "--no-dev", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "--frozen", "--no-dev", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
