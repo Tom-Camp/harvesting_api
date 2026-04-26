@@ -1,4 +1,5 @@
 import uuid
+from unittest.mock import AsyncMock, patch
 
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,14 +23,19 @@ async def test_list_members_not_a_member(second_client: AsyncClient, test_garden
 
 
 async def test_invite_member(client: AsyncClient, test_garden: Garden):
-    response = await client.post(
-        f"/api/v1/gardens/{test_garden.slug}/members/invite",
-        json={"email": "newuser@example.com"},
-    )
+    with patch("app.api.v1.members.send_invitation_email", new=AsyncMock()) as mock_send:
+        response = await client.post(
+            f"/api/v1/gardens/{test_garden.slug}/members/invite",
+            json={"email": "newuser@example.com"},
+        )
     assert response.status_code == 201
     data = response.json()
     assert data["invited_email"] == "newuser@example.com"
-    assert "token" in data
+    assert "token" not in data
+    mock_send.assert_awaited_once()
+    to_email, invite_url, garden_name, inviter_name = mock_send.call_args.args
+    assert to_email == "newuser@example.com"
+    assert "accept-invitation" in invite_url
 
 
 async def test_invite_member_non_owner_forbidden(

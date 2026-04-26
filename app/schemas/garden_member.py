@@ -24,7 +24,6 @@ class GardenInvitationRead(BaseModel):
     id: uuid.UUID
     garden_id: uuid.UUID
     invited_email: str
-    token: str
     expires_at: datetime
 
 

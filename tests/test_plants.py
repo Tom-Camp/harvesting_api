@@ -25,7 +25,7 @@ async def test_list_plants(client: AsyncClient, test_garden: Garden, test_plant:
 
 
 async def test_add_plant(client: AsyncClient, test_garden: Garden):
-    with patch("app.api.v1.plants.get_latin_name", new=AsyncMock(return_value="Capsicum annuum")):
+    with patch("app.api.v1.plants._populate_latin_name", new=AsyncMock(return_value=None)):
         response = await client.post(
             f"/api/v1/gardens/{test_garden.slug}/plants",
             json={"plant_type": "vegetable", "species": "pepper", "variety": "bell"},
@@ -183,7 +183,7 @@ async def test_member_can_add_plant(
     session.add(GardenMember(garden_id=test_garden.id, user_id=second_user.id, role=GardenMemberRole.MEMBER))
     await session.commit()
 
-    with patch("app.api.v1.plants.get_latin_name", new=AsyncMock(return_value="Ocimum basilicum")):
+    with patch("app.api.v1.plants._populate_latin_name", new=AsyncMock(return_value=None)):
         response = await second_client.post(
             f"/api/v1/gardens/{test_garden.slug}/plants",
             json={"plant_type": "herb", "species": "basil"},

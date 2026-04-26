@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -5,9 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import GardenAccess, require_garden_member, require_garden_owner
 from app.db import get_session
+from app.email.resend import send_invitation_email
 from app.models.garden_member import GardenMemberRole
 from app.schemas.garden_member import GardenInvitationRead, GardenMemberInvite, GardenMemberRead
 from app.services import garden_member as member_service
+from app.utils.config import settings
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/gardens/{slug}/members", tags=["members"])
 
@@ -33,6 +38,12 @@ async def invite_member(
         invited_by_user_id=access.user.id,
         email=data.email,
     )
+    invite_url = f"{settings.app_base_url}/accept-invitation/{invitation.token}"
+    inviter_name = " ".join(filter(None, [access.user.first_name, access.user.last_name])) or access.user.email
+    try:
+        await send_invitation_email(data.email, invite_url, access.garden.name, inviter_name)
+    except Exception:
+        logger.exception("Failed to send invitation email to %s", data.email)
     return GardenInvitationRead.model_validate(invitation)
 
 
