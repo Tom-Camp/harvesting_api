@@ -1,3 +1,26 @@
+## v1.0.3 (2026-04-26)
+
+### Fix
+
+- **models**: adding trim function before insert
+- **Dockerfile**: rethinking, reimagining, rereing
+- **Dockerfile**: maybe
+- **Dockerfile**: revert forward
+- **Dockerfile**: port fix
+- **Dockerfile**: revert upvert
+- **Dockerfile**: wishful thinking
+- **Dockerfile**: data.tom.campifying
+- **Dockerfile**: fingers crossed
+- **Dockerfile**: another try
+- **Dockerfile**: Dockerfile revert
+- **Dockerfile**: cache perms fix
+- **Dockerfile**: more dockerfile perms
+- **Dockerfile**: dockerfile perms
+
+### Refactor
+
+- **auth**: extending role-based access control
+
 ## v1.0.2 (2026-04-18)
 
 ### Fix
