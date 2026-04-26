@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PostgreSQL backup script — dumps from Docker container and uploads to Linode Object Storage.
+# PostgreSQL backup script — dumps from a native PostgreSQL instance and uploads to Linode Object Storage.
 # Usage: ./backup.sh [/path/to/backup.env]
 set -euo pipefail
 
@@ -18,16 +18,18 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 FILENAME="${POSTGRES_DB}_${TIMESTAMP}.sql.gz"
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/postgres}"
 RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-7}"
-CONTAINER="${COMPOSE_PROJECT_NAME}-db-1"
+POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
+POSTGRES_PORT="${POSTGRES_PORT:-5432}"
 ENDPOINT="https://${LINODE_REGION}.linodeobjects.com"
 
 mkdir -p "$BACKUP_DIR"
 
-echo "[$(date -Iseconds)] Starting backup of '${POSTGRES_DB}' from container '${CONTAINER}'"
+echo "[$(date -Iseconds)] Starting backup of '${POSTGRES_DB}' from ${POSTGRES_HOST}:${POSTGRES_PORT}"
 
 # Dump and compress in one pass
-docker exec "$CONTAINER" \
-  pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-password \
+PGPASSWORD="$POSTGRES_PASS" pg_dump \
+  -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" \
+  -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
   | gzip > "${BACKUP_DIR}/${FILENAME}"
 
 BACKUP_SIZE=$(du -sh "${BACKUP_DIR}/${FILENAME}" | cut -f1)
