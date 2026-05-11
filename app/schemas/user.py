@@ -1,8 +1,11 @@
+import re
 import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 from zxcvbn import zxcvbn
+
+_USERNAME_RE = re.compile(r"^[a-z0-9_-]{3,30}$")
 
 from app.models.user import UserRole, UserStatus
 
@@ -19,9 +22,10 @@ def _validate_password_strength(v: str) -> str:
     return v
 
 
-class RegisterRequest(BaseModel):
+class UserCreate(BaseModel):
     email: EmailStr
     password: str
+    username: str
     first_name: str | None = None
     last_name: str | None = None
 
@@ -30,16 +34,31 @@ class RegisterRequest(BaseModel):
     def validate_password(cls, v: str) -> str:
         return _validate_password_strength(v)
 
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: str | None) -> str | None:
+        if v is not None and not _USERNAME_RE.match(v):
+            raise ValueError("Username must be 3–30 characters: lowercase letters, digits, _ or -")
+        return v
 
-class LoginRequest(BaseModel):
+
+class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
 
 class UserUpdate(BaseModel):
+    username: str | None = None
     first_name: str | None = None
     last_name: str | None = None
     picture: str | None = None
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: str | None) -> str | None:
+        if v is not None and not _USERNAME_RE.match(v):
+            raise ValueError("Username must be 3–30 characters: letters, digits, _ or -")
+        return v
 
 
 class SetRoleRequest(BaseModel):
@@ -51,6 +70,7 @@ class UserRead(BaseModel):
 
     id: uuid.UUID
     email: str
+    username: str | None = None
     first_name: str | None = None
     last_name: str | None = None
     picture: str | None = None

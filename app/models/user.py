@@ -26,6 +26,7 @@ class UserRole(str, Enum):
 
 class User(ModelBase, table=True):
     email: str = Field(unique=True, index=True)
+    username: str | None = Field(default=None, unique=True, index=True)
     password_hash: str | None = None
     first_name: str | None = None
     last_name: str | None = None

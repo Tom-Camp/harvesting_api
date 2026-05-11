@@ -1,12 +1,14 @@
 import uuid
 
 import structlog
+from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.auth.passwords import hash_password, verify_password
 from app.models.user import User, UserRole, UserStatus
+from app.schemas.user import UserCreate, UserLogin
 from app.utils.config import settings
 
 logger = structlog.get_logger()
@@ -22,16 +24,14 @@ def _maybe_bootstrap_admin(user: User) -> None:
 
 async def create_user(
     session: AsyncSession,
-    email: str,
-    password: str,
-    first_name: str | None = None,
-    last_name: str | None = None,
+    user: UserCreate,
 ) -> User:
     user = User(
-        email=email,
-        password_hash=hash_password(password),
-        first_name=first_name,
-        last_name=last_name,
+        email=user.email,
+        password_hash=hash_password(user.password),
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name,
     )
     _maybe_bootstrap_admin(user)
     session.add(user)
@@ -40,12 +40,12 @@ async def create_user(
     return user
 
 
-async def authenticate(session: AsyncSession, email: str, password: str) -> User | None:
-    result = await session.execute(select(User).where(User.email == email))
+async def authenticate(session: AsyncSession, user_data: UserLogin) -> User | None:
+    result = await session.execute(select(User).where(User.email == user_data.email))
     user = result.scalar_one_or_none()
     if not user or not user.password_hash:
         return None
-    if not verify_password(password, user.password_hash):
+    if not verify_password(user_data.password, user.password_hash):
         return None
     return user
 
@@ -54,8 +54,28 @@ async def get_user(session: AsyncSession, user_id: uuid.UUID) -> User | None:
     return await session.get(User, user_id)
 
 
+async def list_users(session: AsyncSession) -> list[User]:
+    result = await session.execute(select(User).order_by(User.created_at))
+    return list(result.scalars().all())
+
+
+async def delete_user(session: AsyncSession, user: User) -> None:
+    await session.delete(user)
+    await session.commit()
+
+
+async def get_user_by_username(session: AsyncSession, username: str) -> User | None:
+    result = await session.execute(select(User).where(User.username == username))
+    return result.scalar_one_or_none()
+
+
 async def update_user(session: AsyncSession, user: User, data) -> User:
-    for key, value in data.model_dump(exclude_none=True).items():
+    updates = data.model_dump(exclude_none=True)
+    if "username" in updates and updates["username"] != user.username:
+        existing = await get_user_by_username(session, updates["username"])
+        if existing:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already taken")
+    for key, value in updates.items():
         setattr(user, key, value)
     session.add(user)
     await session.commit()
