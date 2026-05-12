@@ -1,16 +1,21 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User, UserStatus
+from app.schemas.user import UserCreate
 
 
 async def _active_user(session: AsyncSession, email: str = "reset@example.com") -> User:
     from app.services import user as user_service
-    user = await user_service.create_user(session, email=email, password="OldPassword1!")
+    user = await user_service.create_user(
+        session=session,
+        user=UserCreate(
+            email=email, username="active", password="incorrect hoarse tattery pin",
+        )
+    )
     user.status = UserStatus.ACTIVE
     session.add(user)
     await session.commit()
