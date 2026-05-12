@@ -1,3 +1,19 @@
+## v2.0.0 (2026-05-11)
+
+### BREAKING CHANGE
+
+- closes #99
+
+### Feat
+
+- **User**: adding username to User model
+- **resend.py**: adding email to garden member invite
+
+### Fix
+
+- **Dockerfile**: trying to make USER work
+- **backup.sh**: changing script to backup native psql rather than docker
+
 ## v1.0.3 (2026-04-26)
 
 ### Fix
