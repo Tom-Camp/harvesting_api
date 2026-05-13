@@ -3,6 +3,7 @@ from app.models.garden import Garden
 from app.models.garden_member import GardenInvitation, GardenMember
 from app.models.password_reset import PasswordResetToken
 from app.models.plant import Plant
+from app.models.site_invitation import SiteInvitation
 from app.models.user import User
 
 # Resolve forward references now that all models are defined
@@ -12,5 +13,15 @@ Plant.model_rebuild()
 GardenMember.model_rebuild()
 GardenInvitation.model_rebuild()
 PasswordResetToken.model_rebuild()
+SiteInvitation.model_rebuild()
 
-__all__ = ["Garden", "GardenInvitation", "GardenMember", "ModelBase", "PasswordResetToken", "Plant", "User"]
+__all__ = [
+    "Garden",
+    "GardenInvitation",
+    "GardenMember",
+    "ModelBase",
+    "PasswordResetToken",
+    "Plant",
+    "SiteInvitation",
+    "User",
+]
