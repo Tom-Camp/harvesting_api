@@ -11,6 +11,7 @@ from app.models.user import UserStatus
 from app.schemas.user import ForgotPasswordRequest, UserLogin, UserCreate, ResetPasswordRequest, TokenResponse
 from app.services import garden_member as member_service
 from app.services import password_reset as reset_service
+from app.services import site_invitation as site_invitation_service
 from app.services import user as user_service
 from app.utils.config import settings
 
@@ -24,14 +25,30 @@ async def register(
     user: UserCreate,
     session: AsyncSession = Depends(get_session),
 ) -> dict[str, str]:
+    initial_status = UserStatus.PENDING
+    invitation = None
+
+    if user.invitation_token:
+        invitation = await site_invitation_service.get_site_invitation_by_token(session, user.invitation_token)
+        if not invitation:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired invitation")
+        error = site_invitation_service.validate_invitation(invitation, str(user.email))
+        if error:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+        initial_status = UserStatus.ACTIVE
+
     try:
-        await user_service.create_user(
-            session=session,
-            user=user,
-        )
+        new_user = await user_service.create_user(session=session, user=user, initial_status=initial_status)
     except IntegrityError as exc:
         detail = "Username already taken" if "username" in str(exc.orig).lower() else "Email already registered"
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
+
+    if invitation:
+        await site_invitation_service.consume_site_invitation(session, invitation)
+        await member_service.accept_pending_invitations(session, new_user)
+
+    if new_user.status == UserStatus.ACTIVE:
+        return {"message": "Registration successful."}
     return {"message": "Registration successful. Your account is pending admin approval."}
 
 
