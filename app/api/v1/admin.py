@@ -9,8 +9,10 @@ from app.auth.dependencies import require_admin
 from app.db import get_session
 from app.email.resend import send_site_invitation_email
 from app.models.user import User, UserStatus
+from app.schemas.garden import GardenRead
 from app.schemas.site_invitation import SiteInvitationCreate, SiteInvitationRead
 from app.schemas.user import SetRoleRequest, UserRead
+from app.services import garden as garden_service
 from app.services import garden_member as member_service
 from app.services import site_invitation as site_invitation_service
 from app.services import user as user_service
@@ -19,6 +21,15 @@ from app.utils.config import settings
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+@router.get("/gardens", response_model=list[GardenRead])
+async def list_gardens(
+    _: User = Depends(require_admin),
+    session: AsyncSession = Depends(get_session),
+) -> list[GardenRead]:
+    gardens = await garden_service.list_all_gardens(session)
+    return [GardenRead.model_validate(g) for g in gardens]
 
 
 @router.get("/users", response_model=list[UserRead])
