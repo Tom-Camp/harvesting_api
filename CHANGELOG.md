@@ -1,3 +1,14 @@
+## v2.0.1 (2026-05-13)
+
+### Feat
+
+- **admin**: adding list all gardens view
+- **site_invitation**: adding application invites
+
+### Fix
+
+- **pydantic_ai**: fix for new release issue for pydantic_ai
+
 ## v2.0.0 (2026-05-11)
 
 ### BREAKING CHANGE

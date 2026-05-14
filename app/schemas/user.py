@@ -28,6 +28,7 @@ class UserCreate(BaseModel):
     username: str
     first_name: str | None = None
     last_name: str | None = None
+    invitation_token: str | None = None
 
     @field_validator("password")
     @classmethod

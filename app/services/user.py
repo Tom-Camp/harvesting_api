@@ -25,19 +25,21 @@ def _maybe_bootstrap_admin(user: User) -> None:
 async def create_user(
     session: AsyncSession,
     user: UserCreate,
+    initial_status: UserStatus = UserStatus.PENDING,
 ) -> User:
-    user = User(
+    db_user = User(
         email=user.email,
         password_hash=hash_password(user.password),
         username=user.username,
         first_name=user.first_name,
         last_name=user.last_name,
+        status=initial_status,
     )
-    _maybe_bootstrap_admin(user)
-    session.add(user)
+    _maybe_bootstrap_admin(db_user)
+    session.add(db_user)
     await session.commit()
-    await session.refresh(user)
-    return user
+    await session.refresh(db_user)
+    return db_user
 
 
 async def authenticate(session: AsyncSession, user_data: UserLogin) -> User | None:

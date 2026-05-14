@@ -55,6 +55,11 @@ async def update_garden(session: AsyncSession, garden: Garden, data: GardenUpdat
     return garden
 
 
+async def list_all_gardens(session: AsyncSession) -> list[Garden]:
+    result = await session.execute(select(Garden))
+    return list(result.scalars().all())
+
+
 async def delete_garden(session: AsyncSession, garden: Garden) -> None:
     await session.delete(garden)
     await session.commit()
