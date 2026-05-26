@@ -1,3 +1,9 @@
+## v2.0.2 (2026-05-25)
+
+### Fix
+
+- **Dockerfile**: fixing ports
+
 ## v2.0.1 (2026-05-13)
 
 ### Feat
