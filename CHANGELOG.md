@@ -1,3 +1,9 @@
+## v1.0.4 (2026-05-25)
+
+### Fix
+
+- **Dockerfile**: updating ports
+
 ## v1.0.3 (2026-04-26)
 
 ### Fix
