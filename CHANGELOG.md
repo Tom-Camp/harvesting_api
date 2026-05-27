@@ -1,3 +1,13 @@
+## v2.0.3 (2026-05-27)
+
+### Feat
+
+- **feedback**: adding a feedback mechanism
+
+### Fix
+
+- **NoteLabel**: adding missing harvest value
+
 ## v2.0.2 (2026-05-25)
 
 ### Fix
