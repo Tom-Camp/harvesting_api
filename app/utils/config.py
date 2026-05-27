@@ -14,6 +14,9 @@ class Settings(BaseSettings):
 
     anthropic_api_key: str
 
+    github_token: str
+    github_repo: str
+
     resend_api_key: str = ""
     resend_from_email: str = "noreply@harvesting.food"
     app_base_url: str = "http://localhost:8000"

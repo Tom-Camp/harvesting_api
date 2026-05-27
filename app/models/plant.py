@@ -29,6 +29,7 @@ class NoteLabel(str, Enum):
     PEST = "pest"
     NOTE = "note"
     ACTION = "action"
+    HARVEST = "harvest"
 
 
 class UnitType(str, Enum):
