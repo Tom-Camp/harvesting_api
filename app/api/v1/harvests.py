@@ -49,7 +49,7 @@ async def update_harvest(
     harvest = await plant_service.get_harvest(session, harvest_id)
     if not harvest or harvest.plant_id != plant_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Harvest not found")
-    if plant.harvest_unit and data.unit != plant.harvest_unit:
+    if plant.harvest_unit and data.unit is not None and data.unit != plant.harvest_unit:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"This plant's harvests are tracked in {plant.harvest_unit.value}",

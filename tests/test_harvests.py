@@ -63,6 +63,22 @@ async def test_update_harvest(client: AsyncClient, test_garden: Garden, test_pla
     assert response.json()["amount"] == 10
 
 
+async def test_update_harvest_partial(client: AsyncClient, test_garden: Garden, test_plant: Plant):
+    create = await client.post(
+        f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/harvests",
+        json={"amount": 3, "unit": "kg"},
+    )
+    harvest_id = create.json()["id"]
+
+    response = await client.patch(
+        f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/harvests/{harvest_id}",
+        json={"amount": 6},
+    )
+    assert response.status_code == 200
+    assert response.json()["amount"] == 6
+    assert response.json()["unit"] == "kg"
+
+
 async def test_update_harvest_unit_mismatch(client: AsyncClient, test_garden: Garden, test_plant: Plant):
     create = await client.post(
         f"/api/v1/gardens/{test_garden.slug}/plants/{test_plant.id}/harvests",
