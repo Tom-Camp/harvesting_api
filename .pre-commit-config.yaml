@@ -39,6 +39,14 @@ repos:
               .*/.*test_.*\.py
           )$
 
+  - repo: local
+    hooks:
+      - id: pip-audit
+        name: pip-audit
+        entry: bash -c 'uv export --no-dev --no-hashes | uvx pip-audit -r /dev/stdin'
+        language: system
+        pass_filenames: false
+
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v4.1.0
     hooks:
