@@ -41,7 +41,7 @@ target-version = "py314"
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "UP", "ASYNC", "RUF"]
-ignore = ["E501"]  # line length enforced by ruff-format
+ignore = ["E501", "B008"]  # E501: line length enforced by ruff-format; B008: Depends() in defaults is FastAPI convention
 
 [tool.ruff.format]
 quote-style = "double"
