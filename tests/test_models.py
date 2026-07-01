@@ -34,14 +34,14 @@ async def test_insert_strips_garden_strings(session: AsyncSession, test_user: Us
         name="  My Garden  ",
         slug="my-garden",
         location="  Austin, TX  ",
-        notes="  some notes  ",
+        description="  some notes  ",
     )
     session.add(garden)
     await session.commit()
     await session.refresh(garden)
     assert garden.name == "My Garden"
     assert garden.location == "Austin, TX"
-    assert garden.notes == "some notes"
+    assert garden.description == "some notes"
 
 
 async def test_insert_strips_plant_strings(session: AsyncSession, test_garden: Garden):
@@ -96,11 +96,11 @@ async def test_update_strips_strings(session: AsyncSession, test_garden: Garden)
 
 
 async def test_none_fields_unchanged(session: AsyncSession, test_garden: Garden):
-    test_garden.notes = None
+    test_garden.description = None
     session.add(test_garden)
     await session.commit()
     await session.refresh(test_garden)
-    assert test_garden.notes is None
+    assert test_garden.description is None
 
 
 # --- API-level ---
