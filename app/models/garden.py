@@ -16,7 +16,7 @@ class Garden(ModelBase, table=True):
     name: str
     slug: str = Field(default="", unique=True, index=True)
     location: str
-    notes: str | None = None
+    description: str | None = None
 
     user: "User" = Relationship(back_populates="gardens")
     plants: list["Plant"] = Relationship(back_populates="garden", cascade_delete=True)

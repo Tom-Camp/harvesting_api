@@ -23,7 +23,7 @@ async def _generate_unique_slug(session: AsyncSession, name: str) -> str:
 
 async def create_garden(session: AsyncSession, user_id: UUID, data: GardenCreate) -> Garden:
     slug = await _generate_unique_slug(session, data.name)
-    garden = Garden(user_id=user_id, name=data.name, slug=slug, location=data.location, notes=data.notes)
+    garden = Garden(user_id=user_id, name=data.name, slug=slug, location=data.location, description=data.description)
     session.add(garden)
     await session.flush()
     session.add(GardenMember(garden_id=garden.id, user_id=user_id, role=GardenMemberRole.OWNER))
