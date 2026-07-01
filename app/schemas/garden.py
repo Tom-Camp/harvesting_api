@@ -16,6 +16,23 @@ class GardenUpdate(BaseModel):
     description: str | None = None
 
 
+class GardenNoteCreate(BaseModel):
+    note: str
+
+
+class GardenNoteUpdate(BaseModel):
+    note: str | None = None
+
+
+class GardenNoteRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    note: str
+    created_at: datetime
+    updated_at: datetime
+
+
 class GardenRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -25,5 +42,6 @@ class GardenRead(BaseModel):
     slug: str
     location: str
     description: str | None = None
+    notes: list[GardenNoteRead] | None = None
     created_at: datetime
     updated_at: datetime
