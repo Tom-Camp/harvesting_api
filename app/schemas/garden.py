@@ -7,13 +7,13 @@ from pydantic import BaseModel, ConfigDict
 class GardenCreate(BaseModel):
     name: str
     location: str
-    notes: str | None = None
+    description: str | None = None
 
 
 class GardenUpdate(BaseModel):
     name: str | None = None
     location: str | None = None
-    notes: str | None = None
+    description: str | None = None
 
 
 class GardenRead(BaseModel):
@@ -24,6 +24,6 @@ class GardenRead(BaseModel):
     name: str
     slug: str
     location: str
-    notes: str | None = None
+    description: str | None = None
     created_at: datetime
     updated_at: datetime
