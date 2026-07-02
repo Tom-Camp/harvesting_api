@@ -1,9 +1,12 @@
 import uuid
 from typing import TYPE_CHECKING
 
+from sqlalchemy import Column
+from sqlalchemy import Enum as SAEnum
 from sqlmodel import Field, Relationship
 
 from app.models.base import ModelBase
+from app.models.plant import NoteLabel
 
 if TYPE_CHECKING:
     from app.models.garden_member import GardenInvitation, GardenMember
@@ -13,6 +16,10 @@ if TYPE_CHECKING:
 
 class GardenNote(ModelBase, table=True):
     note: str
+    label: NoteLabel = Field(
+        default=NoteLabel.NOTE,
+        sa_column=Column(SAEnum(NoteLabel, values_callable=lambda x: [e.value for e in x]), nullable=False),
+    )
     garden_id: uuid.UUID = Field(foreign_key="garden.id")
     garden: "Garden" = Relationship(back_populates="notes")
 

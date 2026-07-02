@@ -3,6 +3,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
+from app.models.plant import NoteLabel
+
 
 class GardenCreate(BaseModel):
     name: str
@@ -18,10 +20,12 @@ class GardenUpdate(BaseModel):
 
 class GardenNoteCreate(BaseModel):
     note: str
+    label: NoteLabel = NoteLabel.NOTE
 
 
 class GardenNoteUpdate(BaseModel):
     note: str | None = None
+    label: NoteLabel | None = None
 
 
 class GardenNoteRead(BaseModel):
@@ -29,6 +33,7 @@ class GardenNoteRead(BaseModel):
 
     id: uuid.UUID
     note: str
+    label: NoteLabel
     created_at: datetime
     updated_at: datetime
 

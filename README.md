@@ -1,6 +1,6 @@
 # 🌱 🍅 🫛 harvesting.food 🥒 🫐 🥦
 
-An AI-powered garden management API. Users build a personal garden by adding plants, and Google Gemini provides tailored 
+An AI-powered garden management API. Users build a personal garden by adding plants, and Google Gemini provides tailored
 advice on planting, care, and harvesting based on the user's location.
 
 ## Tech Stack
@@ -128,7 +128,7 @@ PATCH /api/v1/users/me
 { "location": "Austin, TX" }
 ```
 
-Location can be as specific or general as the user prefers — city, ZIP code, region, etc. It is used to personalize AI 
+Location can be as specific or general as the user prefers — city, ZIP code, region, etc. It is used to personalize AI
 tips.
 
 ---
@@ -175,7 +175,7 @@ PATCH /api/v1/garden   { "name": "Front Yard" }
 ### 5. Manage plants
 
 Plants are the core of the garden. Add plants to your garden and get AI advice on how to grow them. Plants
-are categorized by type, which gives a general idea of their growth habits and care needs. The `plant_type` and 
+are categorized by type, which gives a general idea of their growth habits and care needs. The `plant_type` and
 `species` fields are required, while `variety` is optional but help provide more specific advice.
 
 #### Plant categories
@@ -197,10 +197,10 @@ POST /api/v1/garden/plants
 ```
 
 ```json
-{ 
+{
   "plant_type": "vegetable",
   "species": "tomato",
-  "variety": "roma", 
+  "variety": "roma",
   "notes": "Started from seed",
   "planted_date": "2026-04-01T00:00:00Z"
 }
@@ -235,7 +235,7 @@ Request gardening advice for any plant in your garden. The `mode` query paramete
 POST /api/v1/garden/plants/{plant_id}/care
 ```
 
-The request body includes planting, care, harvesting information and any additional context needed for to raise the 
+The request body includes planting, care, harvesting information and any additional context needed for to raise the
 plants.
 
 
@@ -277,7 +277,7 @@ uv run pytest
 
 ### Commits
 
-This project uses [Conventional Commits](https://www.conventionalcommits.org/). Use `cz commit` for an interactive 
+This project uses [Conventional Commits](https://www.conventionalcommits.org/). Use `cz commit` for an interactive
 prompt:
 
 ```shell
