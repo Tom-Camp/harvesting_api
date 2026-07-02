@@ -11,7 +11,18 @@ async def test_add_garden_note(client: AsyncClient, test_garden: Garden):
         json={"note": "Planted the spring beds"},
     )
     assert response.status_code == 201
-    assert response.json()["note"] == "Planted the spring beds"
+    data = response.json()
+    assert data["note"] == "Planted the spring beds"
+    assert data["label"] == "note"
+
+
+async def test_add_garden_note_with_label(client: AsyncClient, test_garden: Garden):
+    response = await client.post(
+        f"/api/v1/gardens/{test_garden.slug}/notes",
+        json={"note": "Spotted aphids in the beds", "label": "pest"},
+    )
+    assert response.status_code == 201
+    assert response.json()["label"] == "pest"
 
 
 async def test_add_garden_note_garden_not_found(client: AsyncClient):
@@ -53,10 +64,12 @@ async def test_update_garden_note(client: AsyncClient, test_garden: Garden):
 
     response = await client.patch(
         f"/api/v1/gardens/{test_garden.slug}/notes/{note_id}",
-        json={"note": "Updated note"},
+        json={"note": "Updated note", "label": "milestone"},
     )
     assert response.status_code == 200
-    assert response.json()["note"] == "Updated note"
+    data = response.json()
+    assert data["note"] == "Updated note"
+    assert data["label"] == "milestone"
 
 
 async def test_update_garden_note_not_found(client: AsyncClient, test_garden: Garden):

@@ -2,14 +2,14 @@
 
 ## Overview
 
-Role-based access control (RBAC) is a method of regulating access to computer or network resources 
-based on the roles of individual users within an enterprise. RBAC allows administrators to assign 
-permissions to specific roles, and then assign those roles to users, thereby controlling access to 
+Role-based access control (RBAC) is a method of regulating access to computer or network resources
+based on the roles of individual users within an enterprise. RBAC allows administrators to assign
+permissions to specific roles, and then assign those roles to users, thereby controlling access to
 resources based on the user's role within the organization.
 
 ## Matrix
 
-Admins receive a synthetic Owner membership on any garden, giving them full access regardless of 
+Admins receive a synthetic Owner membership on any garden, giving them full access regardless of
 explicit membership.
 
 ### System Role Permissions

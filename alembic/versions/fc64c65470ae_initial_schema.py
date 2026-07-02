@@ -1,7 +1,7 @@
 """initial schema
 
 Revision ID: fc64c65470ae
-Revises: 
+Revises:
 Create Date: 2026-04-04 16:54:46.458190
 
 """
