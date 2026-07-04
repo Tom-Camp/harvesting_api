@@ -10,8 +10,7 @@ advice on planting, care, and harvesting based on the user's location.
 - **SQLModel** — ORM (SQLAlchemy + Pydantic)
 - **PostgreSQL** — database
 - **Alembic** — migrations
-- **Pydantic AI + Google Gemini** — AI tips
-- **Google OIDC** — authentication
+- **Pydantic AI + Anthropic Claude** — AI tips
 - **structlog** — structured logging
 
 ## Getting Started
@@ -38,30 +37,6 @@ Copy the example and fill in your values:
 cp .env.example .env
 ```
 
-```ini
-# Postgres
-POSTGRES_USER=harvest
-POSTGRES_PASSWORD=harvest
-POSTGRES_DB=harvest_food
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-
-# Google OAuth — https://console.cloud.google.com/apis/credentials
-GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your_client_secret
-
-# JWT — generate with: python -c "import secrets; print(secrets.token_hex(32))"
-JWT_SECRET=your_jwt_secret
-
-# Pydantic AI — https://aistudio.google.com/apikey
-GEMINI_API_KEY=your_gemini_api_key
-
-# App
-APP_BASE_URL=http://localhost:8000
-LOG_LEVEL=INFO
-JSON_LOGS=false
-```
-
 ### 3. Start Postgres
 
 ```shell
@@ -86,32 +61,10 @@ API docs are available at [http://localhost:8000/docs](http://localhost:8000/doc
 
 ## User Workflows
 
-### 1. Sign in with Google
+### 1. Create an account
 
 ```
-GET /api/v1/auth/google/login
-```
-
-Returns an `authorization_url`. Redirect the user there. Google authenticates and redirects back to:
-
-```
-GET /api/v1/auth/google/callback?code=...&state=...
-```
-
-Response:
-
-```json
-{
-  "access_token": "<jwt>",
-  "token_type": "bearer",
-  "profile_complete": false
-}
-```
-
-All subsequent requests require the header:
-
-```
-Authorization: Bearer <access_token>
+POST /api/v1/users
 ```
 
 ---
