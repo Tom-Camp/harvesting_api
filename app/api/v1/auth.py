@@ -65,6 +65,7 @@ async def login(
     if user.status != UserStatus.ACTIVE:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account pending approval")
     await member_service.accept_pending_invitations(session, user)
+    await user_service.record_login(session, user)
     return TokenResponse(access_token=create_access_token(user.id))
 
 
