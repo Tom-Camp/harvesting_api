@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 
 import structlog
 from fastapi import HTTPException, status
@@ -49,6 +50,17 @@ async def authenticate(session: AsyncSession, user_data: UserLogin) -> User | No
         return None
     if not verify_password(user_data.password, user.password_hash):
         return None
+    return user
+
+
+async def record_login(session: AsyncSession, user: User) -> User:
+    now = datetime.now(UTC)
+    if user.first_login is None:
+        user.first_login = now
+    user.last_login = now
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
     return user
 
 
