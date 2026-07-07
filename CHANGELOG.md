@@ -1,3 +1,19 @@
+## v2.1.0 (2026-07-07)
+
+### Feat
+
+- **GardenNote**: adding label to garden note
+- **GardenNote**: adding the garden notes field
+
+### Fix
+
+- **schemas.plant**: Fix for a partial harvest item edit
+
+### Refactor
+
+- **User**: adding first and last login dates
+- **Garden.note**: altering garden model
+
 ## v2.0.3 (2026-05-27)
 
 ### Feat

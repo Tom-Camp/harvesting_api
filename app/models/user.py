@@ -1,7 +1,8 @@
+from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column
+from sqlalchemy import Column, DateTime
 from sqlalchemy import Enum as SAEnum
 from sqlmodel import Field, Relationship
 
@@ -45,6 +46,8 @@ class User(ModelBase, table=True):
             nullable=False,
         ),
     )
+    first_login: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    last_login: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
 
     gardens: list["Garden"] = Relationship(back_populates="user")
     memberships: list["GardenMember"] = Relationship(back_populates="user")

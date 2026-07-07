@@ -45,9 +45,9 @@ class HarvestCreate(BaseModel):
 
 
 class HarvestUpdate(BaseModel):
-    created_at: datetime
-    amount: int
-    unit: UnitType
+    created_at: datetime | None = None
+    amount: int | None = None
+    unit: UnitType | None = None
 
 
 class HarvestRead(BaseModel):

@@ -77,6 +77,8 @@ class UserRead(BaseModel):
     picture: str | None = None
     status: UserStatus
     role: UserRole
+    first_login: datetime | None = None
+    last_login: datetime | None = None
     created_at: datetime
     updated_at: datetime
 

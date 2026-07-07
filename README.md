@@ -1,6 +1,6 @@
 # 🌱 🍅 🫛 harvesting.food 🥒 🫐 🥦
 
-An AI-powered garden management API. Users build a personal garden by adding plants, and Google Gemini provides tailored 
+An AI-powered garden management API. Users build a personal garden by adding plants, and Google Gemini provides tailored
 advice on planting, care, and harvesting based on the user's location.
 
 ## Tech Stack
@@ -10,8 +10,7 @@ advice on planting, care, and harvesting based on the user's location.
 - **SQLModel** — ORM (SQLAlchemy + Pydantic)
 - **PostgreSQL** — database
 - **Alembic** — migrations
-- **Pydantic AI + Google Gemini** — AI tips
-- **Google OIDC** — authentication
+- **Pydantic AI + Anthropic Claude** — AI tips
 - **structlog** — structured logging
 
 ## Getting Started
@@ -38,30 +37,6 @@ Copy the example and fill in your values:
 cp .env.example .env
 ```
 
-```ini
-# Postgres
-POSTGRES_USER=harvest
-POSTGRES_PASSWORD=harvest
-POSTGRES_DB=harvest_food
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-
-# Google OAuth — https://console.cloud.google.com/apis/credentials
-GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your_client_secret
-
-# JWT — generate with: python -c "import secrets; print(secrets.token_hex(32))"
-JWT_SECRET=your_jwt_secret
-
-# Pydantic AI — https://aistudio.google.com/apikey
-GEMINI_API_KEY=your_gemini_api_key
-
-# App
-APP_BASE_URL=http://localhost:8000
-LOG_LEVEL=INFO
-JSON_LOGS=false
-```
-
 ### 3. Start Postgres
 
 ```shell
@@ -86,32 +61,10 @@ API docs are available at [http://localhost:8000/docs](http://localhost:8000/doc
 
 ## User Workflows
 
-### 1. Sign in with Google
+### 1. Create an account
 
 ```
-GET /api/v1/auth/google/login
-```
-
-Returns an `authorization_url`. Redirect the user there. Google authenticates and redirects back to:
-
-```
-GET /api/v1/auth/google/callback?code=...&state=...
-```
-
-Response:
-
-```json
-{
-  "access_token": "<jwt>",
-  "token_type": "bearer",
-  "profile_complete": false
-}
-```
-
-All subsequent requests require the header:
-
-```
-Authorization: Bearer <access_token>
+POST /api/v1/users
 ```
 
 ---
@@ -128,7 +81,7 @@ PATCH /api/v1/users/me
 { "location": "Austin, TX" }
 ```
 
-Location can be as specific or general as the user prefers — city, ZIP code, region, etc. It is used to personalize AI 
+Location can be as specific or general as the user prefers — city, ZIP code, region, etc. It is used to personalize AI
 tips.
 
 ---
@@ -175,7 +128,7 @@ PATCH /api/v1/garden   { "name": "Front Yard" }
 ### 5. Manage plants
 
 Plants are the core of the garden. Add plants to your garden and get AI advice on how to grow them. Plants
-are categorized by type, which gives a general idea of their growth habits and care needs. The `plant_type` and 
+are categorized by type, which gives a general idea of their growth habits and care needs. The `plant_type` and
 `species` fields are required, while `variety` is optional but help provide more specific advice.
 
 #### Plant categories
@@ -197,10 +150,10 @@ POST /api/v1/garden/plants
 ```
 
 ```json
-{ 
+{
   "plant_type": "vegetable",
   "species": "tomato",
-  "variety": "roma", 
+  "variety": "roma",
   "notes": "Started from seed",
   "planted_date": "2026-04-01T00:00:00Z"
 }
@@ -235,7 +188,7 @@ Request gardening advice for any plant in your garden. The `mode` query paramete
 POST /api/v1/garden/plants/{plant_id}/care
 ```
 
-The request body includes planting, care, harvesting information and any additional context needed for to raise the 
+The request body includes planting, care, harvesting information and any additional context needed for to raise the
 plants.
 
 
@@ -277,7 +230,7 @@ uv run pytest
 
 ### Commits
 
-This project uses [Conventional Commits](https://www.conventionalcommits.org/). Use `cz commit` for an interactive 
+This project uses [Conventional Commits](https://www.conventionalcommits.org/). Use `cz commit` for an interactive
 prompt:
 
 ```shell

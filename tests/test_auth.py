@@ -81,6 +81,39 @@ async def test_login_success(unauthed_client: AsyncClient, session: AsyncSession
     assert "access_token" in response.json()
 
 
+async def test_login_records_first_and_last_login(unauthed_client: AsyncClient, session: AsyncSession):
+    from app.models.user import UserStatus
+    from app.services import user as user_service
+
+    user = await user_service.create_user(
+        session=session,
+        user=UserCreate(
+            email="firstlogin@example.com", username="firstlogin", password="incorrect hoarse tattery pin",
+        )
+    )
+    user.status = UserStatus.ACTIVE
+    session.add(user)
+    await session.commit()
+    assert user.first_login is None
+    assert user.last_login is None
+
+    login_payload = {"email": "firstlogin@example.com", "password": "incorrect hoarse tattery pin"}
+    response = await unauthed_client.post("/api/v1/auth/login", json=login_payload)
+    assert response.status_code == 200
+
+    await session.refresh(user)
+    assert user.first_login is not None
+    first_login = user.first_login
+
+    response = await unauthed_client.post("/api/v1/auth/login", json=login_payload)
+    assert response.status_code == 200
+
+    await session.refresh(user)
+    assert user.first_login == first_login
+    assert user.last_login is not None
+    assert user.last_login >= first_login
+
+
 async def test_login_wrong_password(unauthed_client: AsyncClient, session: AsyncSession):
     from app.services import user as user_service
     await user_service.create_user(
