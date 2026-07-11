@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 
 from httpx import AsyncClient
 
@@ -70,6 +71,23 @@ async def test_update_garden_note(client: AsyncClient, test_garden: Garden):
     data = response.json()
     assert data["note"] == "Updated note"
     assert data["label"] == "milestone"
+
+
+async def test_update_garden_note_created_at(client: AsyncClient, test_garden: Garden):
+    create = await client.post(f"/api/v1/gardens/{test_garden.slug}/notes", json={"note": "Backdated note"})
+    note_id = create.json()["id"]
+
+    new_created_at = datetime(2020, 1, 15, 12, 0, tzinfo=UTC)
+    response = await client.patch(
+        f"/api/v1/gardens/{test_garden.slug}/notes/{note_id}",
+        json={"created_at": new_created_at.isoformat()},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert datetime.fromisoformat(data["created_at"]).replace(tzinfo=UTC) == new_created_at
+
+    response = await client.get(f"/api/v1/gardens/{test_garden.slug}/notes/{note_id}")
+    assert datetime.fromisoformat(response.json()["created_at"]).replace(tzinfo=UTC) == new_created_at
 
 
 async def test_update_garden_note_not_found(client: AsyncClient, test_garden: Garden):
