@@ -24,6 +24,7 @@ class GardenNoteCreate(BaseModel):
 
 
 class GardenNoteUpdate(BaseModel):
+    created_at: datetime | None = None
     note: str | None = None
     label: NoteLabel | None = None
 
